@@ -2,9 +2,11 @@ import { Html, Head, Main, NextScript } from "next/document";
 
 export default function Document() {
   return (
-    <Html lang="en">
-      <Head />
-      <body className="antialiased">
+    <Html lang="fa" dir="rtl">
+        <Head>  <link rel="icon" type="image/png" href="pic/logo.svg" />
+       </Head>
+      <body className={`antialiased`}>
+        <div id="modal-root"></div>
         <Main />
         <NextScript />
       </body>
