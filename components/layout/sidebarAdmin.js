@@ -104,7 +104,7 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
 
       users: router.pathname === "/profile" || router.pathname === "/setting",
       authentication:
-        router.pathname === "/singIn" || router.pathname === "/singUp",
+        router.pathname === "/login" || router.pathname === "/singUp",
       support:
         router.pathname === "/sendTicket" ||
         router.pathname === "/mngTicket" ||
@@ -705,7 +705,7 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                           ? "hover:bg-gray-800"
                           : "hover:bg-gray-200"
                       }${
-                        router.pathname === "/singIn" ||
+                        router.pathname === "/login" ||
                         router.pathname === "/signUp"
                           ? currentTheme === "dark"
                             ? "bg-gray-800"
@@ -741,13 +741,13 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                     >
                       <li className="group">
                         <a
-                          href="/signIn"
+                          href="/login"
                           className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
                             currentTheme === "dark"
                               ? "group-hover:bg-[#2527396b]"
                               : "group-hover:bg-blue-600/10"
                           } ${
-                            router.pathname === "/signIn" ? "text-blue-700" : ""
+                            router.pathname === "/login" ? "text-blue-700" : ""
                           }`}
                         >
                           - صفحه لاگین

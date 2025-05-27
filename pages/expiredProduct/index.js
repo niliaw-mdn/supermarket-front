@@ -7,6 +7,7 @@ import {
   RiArrowRightSLine,
   RiArrowRightDoubleFill,
 } from "react-icons/ri";
+import { useTheme } from "next-themes";
 
 function Expired() {
   const [expiredProducts, setExpiredProducts] = useState([]);
@@ -14,6 +15,9 @@ function Expired() {
   const [expiredPageCount, setExpiredPageCount] = useState(0);
   const [expiringPageCount, setExpiringPageCount] = useState(0);
   const [expiredCurrentPage, setExpiredCurrentPage] = useState(0);
+  const { systemTheme, theme, setTheme } = useTheme();
+  const currentTheme = theme === "system" ? "light" : theme;
+  const [mounted, setMounted] = useState(false);
   const [expiringCurrentPage, setExpiringCurrentPage] = useState(0);
   const itemsPerPage = 10;
 
@@ -54,9 +58,13 @@ function Expired() {
   };
 
   useEffect(() => {
+    setMounted(true);
+
     fetchExpiredProducts(expiredCurrentPage);
     fetchExpiringProducts(expiringCurrentPage);
   }, []);
+  if (!mounted) return null;
+
 
   const renderPagination = (
     currentPage,
@@ -119,7 +127,7 @@ function Expired() {
   );
 
   return (
-    <div dir="rtl" className="m-5 p-6 bg-white rounded ">
+    <div dir="rtl" className={`m-5 p-6  rounded ${currentTheme === "dark" ? "bg-gray-700" : "bg-white"} `}>
       <h1 className="text-2xl font-bold text-gray-800 mb-6">
         مدیریت محصولات منقضی و در حال انقضا
       </h1>
@@ -129,7 +137,7 @@ function Expired() {
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
           محصولات منقضی شده
         </h2>
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className=" shadow-md rounded-lg overflow-hidden">
           <table className="min-w-full">
             <thead className="bg-red-400 text-white h-12">
               <tr>

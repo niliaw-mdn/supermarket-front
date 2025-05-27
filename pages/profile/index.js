@@ -1,9 +1,19 @@
-import React from "react";
+import React, { useEffect ,useState } from "react";
+import { useTheme } from "next-themes";
 
 function Profile() {
+  const { systemTheme, theme, setTheme } = useTheme();
+  const currentTheme = theme === "system" ? "light" : theme;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  if (!mounted) return null;
+
   return (
     <div className="flex flex-row m-5 gap-5 mx-10">
-      <div className="flex flex-col bg-white rounded-md border border-slate-300 shadow-md">
+      <div className={`flex flex-col  rounded-md border border-slate-300 shadow-md ${currentTheme === "dark" ? "bg-gray-700" : "bg-white"} `}>
         <div className="flex flex-row">
           <div className="flex flex-col p-8">
             <p className=" text-gray-800  font-normal">
@@ -76,12 +86,12 @@ function Profile() {
         </div>
       </div>
       <div className="flex flex-col">
-        <div className="bg-white rounded-md border border-slate-300 shadow-md flex flex-col items-center py-10">
+        <div className={` rounded-md border border-slate-300 shadow-md flex flex-col ${currentTheme === "dark" ? "bg-gray-700" : "bg-white"} items-center py-10`}>
           <img src="pic/avatar.png" width={150} />
           <p className="pt-5">Niloofar Madani</p>
           <p className="text-gray-400 text-base font-normal">Front deeloper</p>
         </div>
-        <div className="bg-white mt-6 rounded-md border border-slate-300 shadow-md flex flex-col  p-7">
+        <div className={` mt-6 rounded-md border border-slate-300 shadow-md flex flex-col ${currentTheme === "dark" ? "bg-gray-700" : "bg-white"}  p-7`} >
           <h2>مهارت ها</h2>
           <div className="flex flex-wrap">
           <p className="p-2 bg-gray-200 text-gray-600 text-sm rounded-xl">Word</p>

@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
-
+import { useTheme } from "next-themes";
 export default function AddItem() {
+  const { systemTheme, theme, setTheme } = useTheme();
+  const currentTheme = theme === "system" ? "light" : theme;
+  const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     uom_id: "",
@@ -49,6 +52,7 @@ export default function AddItem() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const fetchCategories = async () => {
       const categoryData = [
         { category_id: 1, category_name: "Snacks" },
@@ -173,9 +177,10 @@ export default function AddItem() {
       alert("❌ Something went wrong!");
     }
   };
+  if (!mounted) return null;
 
   return (
-    <div className="max-w-4xl mx-auto m-5 p-8 bg-white shadow-lg rounded-lg">
+    <div className={`max-w-4xl mx-auto m-5 p-8 shadow-lg rounded-lg ${currentTheme === "dark" ? "bg-gray-600" : "bg-gray-100"}`}>
       <h1 className="text-2xl font-semibold mb-6">مشخصات محصول</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {Object.keys(formData).map((key) => {
@@ -186,7 +191,7 @@ export default function AddItem() {
                 <div className="flex items-center justify-center w-full">
                   <label
                     htmlFor="dropzone-file"
-                    className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                    className={`flex flex-col items-center justify-center w-full h-64 border-2  border-dashed rounded-lg cursor-pointer ${currentTheme === "dark" ? "bg-gray-700 hover:bg-gray-900 border-gray-500" : "bg-gray-50 hover:bg-gray-200 border-gray-300 "}`}
                   >
                     {formData.file ? (
                       <img
@@ -234,6 +239,9 @@ export default function AddItem() {
           }
 
           if (key === "category_id") {
+            if (!formData[key] && categories.length > 0) {
+              formData[key] = categories[0].category_id;
+            }
             return (
               <div key={key} className="flex flex-col">
                 <label className="mb-2 text-sm font-medium">
@@ -243,10 +251,9 @@ export default function AddItem() {
                   name={key}
                   value={formData[key]}
                   onChange={handleChange}
-                  className="border px-4 py-2 rounded-md"
+                  className={` outline-none ${currentTheme === "dark" ? "bg-gray-800/50" : "bg-white"} px-4 py-2 rounded-md`}
                   required
                 >
-                  <option value=""></option>
                   {categories.map((category) => (
                     <option
                       key={category.category_id}
@@ -259,8 +266,11 @@ export default function AddItem() {
               </div>
             );
           }
-
+          
           if (key === "uom_id") {
+            if (!formData[key] && uoms.length > 0) {
+              formData[key] = uoms[0].uom_id;
+            }
             return (
               <div key={key} className="flex flex-col">
                 <label className="mb-2 text-sm font-medium">
@@ -270,10 +280,9 @@ export default function AddItem() {
                   name={key}
                   value={formData[key]}
                   onChange={handleChange}
-                  className="border px-4 py-2 rounded-md"
+                  className={` outline-none ${currentTheme === "dark" ? "bg-gray-800/50" : "bg-white"} px-4 py-2 rounded-md`}
                   required
                 >
-                  <option value=""></option>
                   {uoms.map((uom) => (
                     <option key={uom.uom_id} value={uom.uom_id}>
                       {uom.uom_name}
@@ -282,7 +291,7 @@ export default function AddItem() {
                 </select>
               </div>
             );
-          }
+          }          
 
           return (
             <div key={key} className="flex flex-col">
@@ -301,7 +310,7 @@ export default function AddItem() {
                 name={key}
                 value={formData[key]}
                 onChange={handleChange}
-                className="border px-4 py-2 rounded-md"
+                className={` outline-none ${currentTheme === "dark" ? "bg-gray-800/50" : "bg-white"} px-4 py-2 rounded-md`}
                 required
               />
             </div>

@@ -7,6 +7,7 @@ import { IoEyeSharp } from "react-icons/io5";
 import EditProduct from "../editproduct/[editId]";
 import toast, { Toaster } from "react-hot-toast";
 import Modal from "@/components/template/modal";
+import { useTheme } from "next-themes";
 
 function Allproduct() {
   const router = useRouter();
@@ -34,6 +35,9 @@ function Allproduct() {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [availableBrands, setAvailableBrands] = useState([]);
   const [loadingBrands, setLoadingBrands] = useState(true);
+  const { systemTheme, theme, setTheme } = useTheme();
+  const currentTheme = theme === "system" ? "light" : theme;
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const fetchBrands = async () => {
@@ -85,6 +89,7 @@ function Allproduct() {
   }, []);
 
   useEffect(() => {
+    setMounted(true);
     const fetchProducts = async () => {
       setLoading(true);
       try {
@@ -190,22 +195,30 @@ function Allproduct() {
     setIsEditModalOpen(false);
     setSelectedProductId(null);
   };
-
+  if (!mounted) return null;
   return (
     <>
       <Toaster />
-      <div className="mb-[550px] mx-5">
+      <div className="m-5">
         <h2 className="p-7 font-bold">محصولات موجود</h2>
         <div className="relative w-full">
           {/* Filters Section */}
-          <div className="border-2 bg-white border-l-gray-500 shadow-md shadow-black w-[320px] inline-block align-top">
+          <div
+            className={`border  shadow-md w-[320px] inline-block align-top ${
+              currentTheme === "dark"
+                ? "bg-gray-800 border-gray-900"
+                : "bg-white border-gray-500"
+            }`}
+          >
             {/* Category Filter */}
             <div className="relative w-full">
               <button
                 onClick={() =>
                   handleFilterChange("isCategoryOpen", !filters.isCategoryOpen)
                 }
-                className="w-full inline-flex rounded-md bg-white px-7 pt-5 pb-3 font-medium text-gray-700 border-b-2"
+                className={`w-full inline-flex rounded-md px-7 pt-5 pb-3 font-medium text-gray-500 border-b-2 ${
+                  currentTheme === "dark" ? "bg-gray-800" : "bg-white"
+                }`}
               >
                 دسته بندی
                 <svg
@@ -224,15 +237,25 @@ function Allproduct() {
                 </svg>
               </button>
               {filters.isCategoryOpen && (
-                <div className="w-full bg-white shadow-lg ring-1 ring-black ring-opacity-5">
-                  <ul className="py-1 text-md divide-y-2 text-gray-700 text-center">
+                <div
+                  className={`w-full  shadow-lg ring  ${
+                    currentTheme === "dark"
+                      ? "bg-gray-800 ring-gray-700"
+                      : "bg-white ring-gray-300"
+                  }`}
+                >
+                  <ul className="py-1 text-md divide-y divide-gray-600 text-gray-500 text-center">
                     {categories.map((category) => (
                       <li key={category.category_id}>
                         <button
                           onClick={() =>
                             handleCategoryChange(category.category_id)
-                          } // Pass category ID
-                          className="block px-4 py-2 hover:bg-gray-100 w-full"
+                          }
+                          className={`block px-4 py-2 w-full ${
+                            currentTheme === "dark"
+                              ? "hover:bg-gray-600"
+                              : "hover:bg-gray-100"
+                          }`}
                         >
                           {category.category_name}
                         </button>
@@ -249,7 +272,9 @@ function Allproduct() {
                 onClick={() =>
                   handleFilterChange("isPriceOpen", !filters.isPriceOpen)
                 }
-                className="w-full inline-flex rounded-md bg-white px-7 pt-5 pb-3 font-medium text-gray-700 border-b-2"
+                className={`w-full inline-flex rounded-md px-7 pt-5 pb-3 font-medium text-gray-500 border-b-2 ${
+                  currentTheme === "dark" ? "bg-gray-800" : "bg-white"
+                }`}
               >
                 محدوده قیمت
                 <svg
@@ -268,10 +293,16 @@ function Allproduct() {
                 </svg>
               </button>
               {filters.isPriceOpen && (
-                <div className="w-full bg-white shadow-lg ring-1 ring-black ring-opacity-5 p-4">
+                <div
+                  className={`w-full  shadow-lg ring  ${
+                    currentTheme === "dark"
+                      ? "bg-gray-800 ring-gray-700"
+                      : "bg-white ring-gray-300"
+                  }`}
+                >
                   <div className="flex flex-col items-center">
                     <div className="flex justify-between w-full mb-4">
-                      <label className="text-sm text-gray-600">
+                      <label className="text-sm text-gray-400">
                         حداقل قیمت:
                         <input
                           type="number"
@@ -286,7 +317,7 @@ function Allproduct() {
                           }
                         />
                       </label>
-                      <label className="text-sm text-gray-600">
+                      <label className="text-sm text-gray-400">
                         حداکثر قیمت:
                         <input
                           type="number"
@@ -313,7 +344,9 @@ function Allproduct() {
                 onClick={() =>
                   handleFilterChange("isBrandOpen", !filters.isBrandOpen)
                 }
-                className="w-full inline-flex rounded-md bg-white px-7 pt-5 pb-3 font-medium text-gray-700 border-b-2"
+                className={`w-full inline-flex rounded-md px-7 pt-5 pb-3 font-medium text-gray-500 border-b-2 ${
+                  currentTheme === "dark" ? "bg-gray-800" : "bg-white"
+                }`}
               >
                 برند
                 <svg
@@ -335,13 +368,19 @@ function Allproduct() {
               </button>
 
               {filters.isBrandOpen && (
-                <div className="w-full bg-white shadow-lg ring-1 ring-black ring-opacity-5 p-4 max-h-60 overflow-y-auto">
+                <div
+                  className={`w-full  shadow-lg ring  ${
+                    currentTheme === "dark"
+                      ? "bg-gray-800 ring-gray-700"
+                      : "bg-white ring-gray-300"
+                  }`}
+                >
                   {loadingBrands ? (
                     <div className="text-center py-4">
                       در حال بارگذاری برندها...
                     </div>
                   ) : availableBrands.length > 0 ? (
-                    <ul className="py-1 text-md divide-y-2 text-gray-700">
+                    <ul className="py-1 text-md divide-y-2 text-gray-500">
                       {availableBrands.map((brand) => (
                         <li
                           className="py-2 flex items-center justify-between"
@@ -386,29 +425,73 @@ function Allproduct() {
           </div>
 
           {/* Products Table */}
-          <div className="border-2 bg-white border-l-gray-500 shadow-md shadow-black w-[calc(100%-350px)] mr-5 inline-block align-top">
-            <table className="table-auto border-collapse border border-gray-300 w-full text-center h-full">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="border border-gray-300 px-4 py-2">
+          <div
+            className={` shadow-md rounded w-[calc(100%-350px)] mr-5 inline-block align-top ${
+              currentTheme === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <table
+              className={`table-auto border-collapse w-full text-center h-full ${
+                currentTheme === "dark" ? "border-gray-600" : "border-gray-400"
+              }`}
+            >
+              <thead
+                className={` ${
+                  currentTheme === "dark" ? "bg-gray-600" : "bg-gray-200"
+                }`}
+              >
+                <tr className="h-16">
+                  <th
+                    className={`border px-4 py-2 ${
+                      currentTheme === "dark"
+                        ? "border-gray-600"
+                        : "border-gray-300"
+                    }`}
+                  >
                     نام محصول
                   </th>
-                  <th className="border border-gray-300 px-4 py-2">تصویر</th>
-                  <th className="border border-gray-300 px-4 py-2">قیمت</th>
-                  <th className="border border-gray-300 px-4 py-2">موجودی</th>
-                  <th className="border border-gray-300 px-4 py-2"></th>
+                  <th
+                    className={`border px-4 py-2 ${
+                      currentTheme === "dark"
+                        ? "border-gray-600"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    تصویر
+                  </th>
+                  <th
+                    className={`border px-4 py-2 ${
+                      currentTheme === "dark"
+                        ? "border-gray-600"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    قیمت
+                  </th>
+                  <th
+                    className={`border px-4 py-2 ${
+                      currentTheme === "dark"
+                        ? "border-gray-600"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    موجودی
+                  </th>
+                  <th
+                    className={` px-4 py-2`}
+                  ></th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((post) => (
                   <tr
                     key={post.product_id}
-                    className="odd:bg-white even:bg-gray-100"
+                    className={`${currentTheme === "dark" ? "odd:bg-gray-600 even:bg-gray-800 " : "odd:bg-white even:bg-gray-100 "}`}
                   >
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className={`border px-4 py-2 ${currentTheme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
                       {post.name}
                     </td>
-                    <td className="border border-gray-300">
+                    <td className={`border  ${currentTheme === "dark" ? "border-gray-700" : "border-gray-300"}`}>
                       <div className="flex justify-center">
                         <img
                           src={`http://localhost:5000/uploads/${encodeURI(
@@ -419,13 +502,13 @@ function Allproduct() {
                         />
                       </div>
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className={`border  ${currentTheme === "dark" ? "border-gray-700" : "border-gray-300"} px-4 py-2`}>
                       {post.price_per_unit} تومان
                     </td>
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className={`border  ${currentTheme === "dark" ? "border-gray-700" : "border-gray-300"} px-4 py-2`}>
                       {post.available_quantity}
                     </td>
-                    <td className="flex justify-around border border-gray-300 px-4 py-[25px]">
+                    <td className={`flex justify-around border  ${currentTheme === "dark" ? "border-gray-700" : "border-gray-300"} px-4 py-[25px]`}>
                       <button
                         className="relative group ml-4"
                         onClick={() => {
@@ -476,11 +559,11 @@ function Allproduct() {
                 <li>
                   <button
                     onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                    className={`flex items-center justify-center px-3 h-14 w-14 leading-tight text-gray-500 bg-white border border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 ${
+                    className={`flex items-center justify-center px-3 h-14 w-14 leading-tight text-gray-700  border  rounded-s-lg  hover:text-gray-400 ${
                       page === 1
                         ? "opacity-50 cursor-not-allowed pointer-events-none"
                         : ""
-                    }`}
+                    } ${currentTheme === "dark" ? "bg-gray-500 border-gray-700 hover:bg-gray-600": "bg-white border-gray-300 hover:bg-gray-100"}`}
                     disabled={page === 1}
                   >
                     <span className="sr-only">Previous</span>
@@ -507,8 +590,8 @@ function Allproduct() {
                       onClick={() => setPage(index + 1)}
                       className={`flex items-center justify-center px-3 h-14 w-14 leading-tight ${
                         page === index + 1
-                          ? "text-blue-600 bg-blue-50 border border-blue-300"
-                          : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700"
+                          ? currentTheme === "dark" ? "text-blue-300 bg-blue-800 border border-blue-700": "text-blue-600 bg-blue-50 border border-blue-300"
+                          : currentTheme === "dark" ? "bg-gray-600 hover:bg-gray-800 border border-gray-700": "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700"
                       }`}
                     >
                       {index + 1}
@@ -520,11 +603,11 @@ function Allproduct() {
                     onClick={() =>
                       setPage((prev) => Math.min(prev + 1, totalPages))
                     }
-                    className={`flex items-center justify-center px-3 h-14 w-14 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 ${
+                    className={`flex items-center justify-center px-3 h-14 w-14 leading-tight text-gray-700  border  rounded-e-lg  hover:text-gray-400 ${
                       page === totalPages
                         ? "opacity-50 cursor-not-allowed pointer-events-none"
                         : ""
-                    }`}
+                    } ${currentTheme === "dark" ? "bg-gray-500 border-gray-700 hover:bg-gray-600": "bg-white border-gray-300 hover:bg-gray-100"}`}
                     disabled={page === totalPages}
                   >
                     <span className="sr-only">Next</span>
@@ -554,101 +637,104 @@ function Allproduct() {
       {/* Product Details Modal */}
       {isModalOpen && productDetails && (
         <Modal onClose={() => setShowModal(false)}>
-        <div className="fixed inset-0  flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-md shadow-lg w-1/2">
-            <h4 className="p-3 font-medium">
-              جزئیات محصول {productDetails.name}
-            </h4>
-            <table className="w-full text-sm text-left rtl:text-right text-gray-500">
-              <tbody>
-                <tr className="border-b-8 border-white">
-                  <th
-                    scope="row"
-                    className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
-                  >
-                    دسته بندی:
-                  </th>
-                  <td className="px-6 py-4 bg-zinc-200">
-                    {productDetails.category_name}
-                  </td>
-                </tr>
-                <tr className="border-b-8 border-white">
-                  <th
-                    scope="row"
-                    className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
-                  >
-                    قیمت:
-                  </th>
-                  <td className="px-6 py-4 bg-zinc-200">
-                    {productDetails.price_per_unit} تومان
-                  </td>
-                </tr>
-                <tr className="border-b-8 border-white">
-                  <th
-                    scope="row"
-                    className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
-                  >
-                    برند:
-                  </th>
-                  <td className="px-6 py-4 bg-zinc-200">
-                    {productDetails.manufacturer_name}
-                  </td>
-                </tr>
-                <tr className="border-b-8 border-white">
-                  <th
-                    scope="row"
-                    className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
-                  >
-                    موجودی
-                  </th>
-                  <td className="px-6 py-4 bg-zinc-200">
-                    {productDetails.available_quantity}
-                  </td>
-                </tr>
-                <tr className="border-b-8 border-white">
-                  <th
-                    scope="row"
-                    className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
-                  >
-                    ارزش غذایی:
-                  </th>
-                  <td className="px-6 py-4 bg-zinc-200">
-                    {productDetails.nutritional_information}
-                  </td>
-                </tr>
-                <tr className="border-b-8 border-white">
-                  <th
-                    scope="row"
-                    className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
-                  >
-                    تاریخ انقضا:
-                  </th>
-                  <td className="px-6 py-4 bg-zinc-200">
-                    {productDetails.expiration_date}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="fixed inset-0  flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-md shadow-lg w-1/2">
+              <h4 className="p-3 font-medium">
+                جزئیات محصول {productDetails.name}
+              </h4>
+              <table className="w-full text-sm text-left rtl:text-right text-gray-500">
+                <tbody>
+                  <tr className="border-b-8 border-white">
+                    <th
+                      scope="row"
+                      className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
+                    >
+                      دسته بندی:
+                    </th>
+                    <td className="px-6 py-4 bg-zinc-200">
+                      {productDetails.category_name}
+                    </td>
+                  </tr>
+                  <tr className="border-b-8 border-white">
+                    <th
+                      scope="row"
+                      className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
+                    >
+                      قیمت:
+                    </th>
+                    <td className="px-6 py-4 bg-zinc-200">
+                      {productDetails.price_per_unit} تومان
+                    </td>
+                  </tr>
+                  <tr className="border-b-8 border-white">
+                    <th
+                      scope="row"
+                      className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
+                    >
+                      برند:
+                    </th>
+                    <td className="px-6 py-4 bg-zinc-200">
+                      {productDetails.manufacturer_name}
+                    </td>
+                  </tr>
+                  <tr className="border-b-8 border-white">
+                    <th
+                      scope="row"
+                      className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
+                    >
+                      موجودی
+                    </th>
+                    <td className="px-6 py-4 bg-zinc-200">
+                      {productDetails.available_quantity}
+                    </td>
+                  </tr>
+                  <tr className="border-b-8 border-white">
+                    <th
+                      scope="row"
+                      className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
+                    >
+                      ارزش غذایی:
+                    </th>
+                    <td className="px-6 py-4 bg-zinc-200">
+                      {productDetails.nutritional_information}
+                    </td>
+                  </tr>
+                  <tr className="border-b-8 border-white">
+                    <th
+                      scope="row"
+                      className="px-6 py-4 font-medium text-white whitespace-nowrap bg-zinc-500"
+                    >
+                      تاریخ انقضا:
+                    </th>
+                    <td className="px-6 py-4 bg-zinc-200">
+                      {productDetails.expiration_date}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
-            <button
-              className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md"
-              onClick={closeModal}
-            >
-              بستن
-            </button>
+              <button
+                className="mt-4 px-4 py-2 bg-red-500 text-white rounded-md"
+                onClick={closeModal}
+              >
+                بستن
+              </button>
+            </div>
           </div>
-        </div>
         </Modal>
       )}
 
       {/* Edit Product Modal */}
       {isEditModalOpen && (
         <Modal onClose={() => setShowModal(false)}>
-        <div className="fixed inset-0  flex justify-center items-center z-50">
-          <div className="rounded-md shadow-lg">
-            <EditProduct editId={selectedProductId} onClose={closeEditModal} />
+          <div className="fixed inset-0  flex justify-center items-center z-50">
+            <div className="rounded-md shadow-lg">
+              <EditProduct
+                editId={selectedProductId}
+                onClose={closeEditModal}
+              />
+            </div>
           </div>
-        </div>
         </Modal>
       )}
     </>

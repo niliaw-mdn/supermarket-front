@@ -1,11 +1,16 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-
+import { useTheme } from "next-themes";
 export default function PopularProduct() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { systemTheme, theme, setTheme } = useTheme();
+  const currentTheme = theme === "system" ? "light" : theme;
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
     const fetchData = async () => {
       try {
         // Fetching each API endpoint sequentially
@@ -36,12 +41,13 @@ export default function PopularProduct() {
 
   // Destructure data
   const { topProducts, popularCategories, peakHour, monthlyGrowth } = data;
+  if (!mounted) return null;
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-10 text-right" dir="rtl">
       <h1 className="text-3xl font-bold text-center mb-6">گزارش‌های آماری فروشگاه</h1>
 
-      <section className="bg-white rounded-xl shadow p-6">
+      <section className={` rounded-xl shadow p-6 ${currentTheme === "dark" ? "bg-gray-700" : "bg-white"}`}>
         <h2 className="text-xl font-semibold mb-4">📦 پرفروش‌ترین محصولات</h2>
         <ul className="space-y-2">
           {topProducts.map((item) => (
@@ -53,7 +59,7 @@ export default function PopularProduct() {
         </ul>
       </section>
 
-      <section className="bg-white rounded-xl shadow p-6">
+      <section className={` rounded-xl shadow p-6 ${currentTheme === "dark" ? "bg-gray-700" : "bg-white"}`}>
         <h2 className="text-xl font-semibold mb-4">📁 محبوب‌ترین دسته‌بندی‌ها</h2>
         <ul className="space-y-2">
           {popularCategories.map((cat) => (
@@ -65,7 +71,7 @@ export default function PopularProduct() {
         </ul>
       </section>
 
-      <section className="bg-white rounded-xl shadow p-6">
+      <section className={` rounded-xl shadow p-6 ${currentTheme === "dark" ? "bg-gray-700" : "bg-white"}`}>
         <h2 className="text-xl font-semibold mb-4">⏰ ساعت اوج سفارش</h2>
         <p>
           بیشترین سفارش در ساعت <strong>{peakHour.hour}:00</strong> با{" "}
@@ -73,7 +79,7 @@ export default function PopularProduct() {
         </p>
       </section>
 
-      <section className="bg-white rounded-xl shadow p-6">
+      <section className={` rounded-xl shadow p-6 ${currentTheme === "dark" ? "bg-gray-700" : "bg-white"}`}>
         <h2 className="text-xl font-semibold mb-4">📊 رشد فروش ماهانه</h2>
         <p>
           فروش این ماه:{" "}

@@ -225,8 +225,8 @@ function Performance() {
             ))}
         </Swiper>
         <div className="mt-16 flex justify-center">
-          <div className="w-[90%] flex flex-row gap-3 flex-wrap justify-start">
-            <div className={`flex-1 flex-col  border rounded-md shadow-md mt-20 ${currentTheme === "dark" ? "bg-gray-800 border-zinc-700" : "bg-white border-zinc-300"}`}>
+        <div className="w-[90%] grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+        <div className={`flex-1 flex-col  border rounded-md shadow-md mt-20 ${currentTheme === "dark" ? "bg-gray-800 border-zinc-700" : "bg-white border-zinc-300"}`}>
               <p className="w-full border-b h-14 p-3">کارکرد هفتگی</p>
               <Chart {...dailyData} />
             </div>

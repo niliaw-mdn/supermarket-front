@@ -1,129 +1,143 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Chart from "@/components/template/chart";
+import { useTheme } from "next-themes";
 
 const ApexCharts = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 function TotalSale() {
   const [dailySalesData, setDailySalesData] = useState([]);
   const [paymentMethodSales, setPaymentMethodSales] = useState([]);
-  const [pieChartOptions, setPieChartOptions] = useState(null);
-  const [showLegend, setShowLegend] = useState(false);
+  const [bestProducts, setBestProducts] = useState([]);
+  const { systemTheme, theme, setTheme } = useTheme();
+  const currentTheme = theme === "system" ? "light" : theme;
+  const [mounted, setMounted] = useState(false);
+  const [chartData, setChartData] = useState({
+    dailyData: null,
+    pieData: null,
+  });
 
-  // Mock data setup
   useEffect(() => {
-    const fakeDailySales = [
-      ["2025-05-10", 1500000],
-      ["2025-05-11", 1800000],
-      ["2025-05-12", 1200000],
-      ["2025-05-13", 2000000],
-      ["2025-05-14", 1700000],
-    ];
+    setMounted(true);
 
-    const fakePaymentMethods = [
-      { payment_method: "کارت بانکی", total_sales: 3500000 },
-      { payment_method: "نقدی", total_sales: 2000000 },
-      { payment_method: "درگاه اینترنتی", total_sales: 2700000 },
-    ];
+    // 1. Fetch Daily Sales
+    fetch("http://localhost:5000/stats/sales_by_date")
+      .then((res) => res.json())
+      .then((data) => {
+        const formattedData = data.map((item) => ({
+          date: item[0],
+          daily_sales: item[1],
+        }));
+        setDailySalesData(formattedData);
 
-    const categories = fakeDailySales.map((record) => {
-      const date = new Date(record[0]);
-      return date.toLocaleDateString("fa-IR", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
+        const categories = formattedData.map((item) =>
+          new Date(item.date).toLocaleDateString("fa-IR", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
+        );
+        const dailyData = formattedData.map((item) => item.daily_sales);
+
+        setChartData((prev) => ({
+          ...prev,
+          dailyData: {
+            title: "فروش روزانه",
+            categories,
+            data: dailyData,
+            color: "#FF5733",
+          },
+        }));
       });
-    });
 
-    const dailyData = fakeDailySales.map((record) => record[1]);
-    const pieData = fakePaymentMethods.map((record) => record.total_sales);
-    const labels = fakePaymentMethods.map((record) => record.payment_method);
+    // 2. Fetch Sales by Payment Method
+    fetch("http://localhost:5000/stats/sales_by_payment_method")
+      .then((res) => res.json())
+      .then((data) => {
+        const formattedData = data.map((item) => ({
+          payment_method_id: item[0] || "نامشخص",
+          total_sales: item[1],
+        }));
+        setPaymentMethodSales(formattedData);
 
-    setDailySalesData(fakeDailySales);
-    setPaymentMethodSales(fakePaymentMethods);
+        const series = formattedData.map((item) => item.total_sales);
+        const labels = formattedData.map(
+          (item) => `روش ${item.payment_method_id}`
+        );
 
-    setPieChartOptions({
-      dailyData: {
-        title: "فروش روزانه",
-        categories: categories,
-        data: dailyData,
-        color: "#FF5733",
-      },
-      pieData: {
-        series: pieData,
-        options: {
-          chart: { type: "pie" },
-          labels: labels,
-          legend: { show: false, position: "bottom" },
-          colors: ["#FF5733", "#33FF57", "#5733FF", "#FFC300", "#DAF7A6"],
-          responsive: [
-            {
-              breakpoint: 480,
-              options: {
-                chart: { width: 300 },
-                legend: { position: "bottom" },
+        setChartData((prev) => ({
+          ...prev,
+          pieData: {
+            series,
+            options: {
+              chart: {
+                type: "pie",
+                height: 350,
               },
+              labels,
+              legend: {
+                show: true,
+                position: "bottom",
+                labels: {
+                  colors: "#333",
+                },
+              },
+              colors: ["#FF5733", "#33FF57", "#5733FF", "#FFC300", "#DAF7A6"],
+              responsive: [
+                {
+                  breakpoint: 480,
+                  options: {
+                    chart: { width: 300 },
+                    legend: { position: "bottom" },
+                  },
+                },
+              ],
             },
-          ],
-        },
-      },
-    });
+          },
+        }));
+      });
+
+    // 3. Fetch Top Products
+    fetch("http://localhost:5000/stats/top_products")
+      .then((res) => res.json())
+      .then((data) => {
+        setBestProducts(data.map((item) => item[0] || "نامشخص"));
+      });
   }, []);
 
-  // Calculate total sales and transaction metrics
-  const totalSales = dailySalesData.reduce((acc, record) => acc + record[1], 0);
+  const totalSales = dailySalesData.reduce(
+    (acc, item) => acc + item.daily_sales,
+    0
+  );
   const totalTransactions = dailySalesData.length;
   const avgTransactionValue = totalTransactions
     ? (totalSales / totalTransactions).toFixed(0)
     : 0;
 
-  // Mock data for best-selling products
-  const bestSellingProducts = [
-    "شامپو ضدشوره",
-    "کفش ورزشی مردانه",
-    "لباس مجلسی زنانه",
-    "گوشی موبایل سامسونگ",
-    "دوربین دیجیتال کانن",
-  ];
+  const getRandom = (arr) =>
+    arr.length ? arr[Math.floor(Math.random() * arr.length)] : "نامشخص";
 
-  // Mock data for payment methods
-  const paymentMethods = [
-    "کارت بانکی",
-    "نقدی",
-    "درگاه اینترنتی",
-  ];
-
-  // Function to randomly pick a best-selling product and payment method
-  const getRandomData = () => {
-    const randomProduct =
-      bestSellingProducts[Math.floor(Math.random() * bestSellingProducts.length)];
-    const randomPaymentMethod =
-      paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
-    return { randomProduct, randomPaymentMethod };
-  };
-
-  // Toggle pie chart legend
   const toggleLegend = () => {
-    setPieChartOptions((prevOptions) => ({
-      ...prevOptions,
+    setChartData((prev) => ({
+      ...prev,
       pieData: {
-        ...prevOptions.pieData,
+        ...prev.pieData,
         options: {
-          ...prevOptions.pieData.options,
+          ...prev.pieData.options,
           legend: {
-            ...prevOptions.pieData.options.legend,
-            show: !showLegend,
+            ...prev.pieData.options.legend,
+            show: !prev.pieData.options.legend.show,
           },
         },
       },
     }));
-    setShowLegend(!showLegend);
   };
+  if (!mounted) return null;
 
   return (
-    <div>
+    <div className="p-4">
       <div className="flex justify-center">
-        <table className="table-auto border-collapse border border-gray-300 my-10 w-[90%]">
+        <table className="table-auto border-collapse border border-gray-500 my-10 w-[90%]">
           <thead className="bg-slate-600 text-white">
             <tr>
               <th className="px-4 py-5">تاریخ</th>
@@ -136,29 +150,38 @@ function TotalSale() {
             </tr>
           </thead>
           <tbody>
-            {dailySalesData.map((record, index) => {
-              const runningTotalSales = dailySalesData.slice(0, index + 1).reduce((acc, record) => acc + record[1], 0);
+            {dailySalesData.map((item, index) => {
+              const runningTotalSales = dailySalesData
+                .slice(0, index + 1)
+                .reduce((acc, r) => acc + r.daily_sales, 0);
               const runningTransactions = index + 1;
-              const runningAvgTransactionValue = (runningTotalSales / runningTransactions).toFixed(0);
-
-              // Get random data for each row
-              const { randomProduct, randomPaymentMethod } = getRandomData();
+              const runningAvg = (
+                runningTotalSales / runningTransactions
+              ).toFixed(0);
 
               return (
-                <tr key={index} className="odd:bg-white even:bg-gray-200">
-                  <td className="border border-gray-300 px-4 py-2">
-                    {new Date(record[0]).toLocaleDateString("fa-IR", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                <tr key={index} className={`${currentTheme === "dark" ? "odd:bg-gray-500 even:bg-gray-700" : "odd:bg-white even:bg-gray-200"} `}>
+                  <td className=" px-4 py-2">
+                    {new Date(item.date).toLocaleDateString("fa-IR")}
                   </td>
-                  <td className="border border-gray-300 px-4 py-2">{record[1]}</td>
-                  <td className="border border-gray-300 px-4 py-2">{runningTransactions}</td>
-                  <td className="border border-gray-300 px-4 py-2">{runningAvgTransactionValue}</td>
-                  <td className="border border-gray-300 px-4 py-2">0</td>
-                  <td className="border border-gray-300 px-4 py-2">{randomProduct}</td>
-                  <td className="border border-gray-300 px-4 py-2">{randomPaymentMethod}</td>
+                  <td className=" px-4 py-2">
+                    {item.daily_sales.toLocaleString()}
+                  </td>
+                  <td className=" px-4 py-2">{runningTransactions}</td>
+                  <td className=" px-4 py-2">
+                    {runningAvg.toLocaleString()}
+                  </td>
+                  <td className=" px-4 py-2">0</td>
+                  <td className=" px-4 py-2">
+                    {getRandom(bestProducts)}
+                  </td>
+                  <td className=" px-4 py-2">
+                    {getRandom(
+                      paymentMethodSales.map(
+                        (p) => `روش ${p.payment_method_id}`
+                      )
+                    )}
+                  </td>
                 </tr>
               );
             })}
@@ -166,32 +189,41 @@ function TotalSale() {
         </table>
       </div>
 
-      <div className="flex flex-row justify-evenly mb-5">
-        <div className="bg-white border border-slate-300 shadow-md flex items-center rounded-md p-2">
-          {pieChartOptions?.dailyData && (
-            <Chart {...pieChartOptions.dailyData} />
-          )}
-        </div>
-        <div className="flex flex-col bg-white p-10 border border-slate-300 shadow-md items-center rounded-md">
-          {pieChartOptions?.pieData && (
-            <ApexCharts
-              options={pieChartOptions.pieData.options}
-              series={pieChartOptions.pieData.series}
-              type="pie"
-              height="300"
-              width="600"
+      <div className="flex gap-5 mr-10">
+        {chartData?.dailyData && (
+          <div className={` w-full flex flex-col items-center rounded ${currentTheme === "dark"? "bg-gray-800": "bg-white shadow"}`}>
+            <Chart
+              title={chartData.dailyData.title}
+              categories={chartData.dailyData.categories}
+              data={chartData.dailyData.data}
+              color={chartData.dailyData.color}
             />
-          )}
-          <button
-            className="mt-5 text-blue-600 font-normal text-right text-base"
-            onClick={toggleLegend}
-          >
-            {showLegend ? "بستن" : "اطلاعات بیشتر..."}
-          </button>
-        </div>
+          </div>
+        )}
+
+        {chartData?.pieData && chartData.pieData.series.length > 0 && (
+          <div className={` w-full flex flex-col items-center rounded ${currentTheme === "dark"? "bg-gray-800": "bg-white shadow"}`}>
+            <button
+              onClick={toggleLegend}
+              className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-md"
+            >
+              {chartData.pieData.options.legend.show
+                ? "پنهان کردن توضیحات"
+                : "نمایش توضیحات"}
+            </button>
+            <ApexCharts
+              options={chartData.pieData.options}
+              series={chartData.pieData.series}
+              type="pie"
+              height={350}
+              width={500}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 TotalSale.showSidebar = true;
 export default TotalSale;

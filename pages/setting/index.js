@@ -1,30 +1,34 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { useTheme } from "next-themes";
 
 const Chart = dynamic(() => import("@/components/template/chart"), { ssr: false });
 
 export default function Admin() {
   const [admin, setAdmin] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { systemTheme, theme, setTheme } = useTheme();
+  const currentTheme = theme === "system" ? "light" : theme;
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
     fetch("/server/admin.json") // Ensure correct path to JSON file
       .then((res) => res.json())
       .then((data) => {
         setAdmin(data);
-        setLoading(false);
       })
       .catch((err) => {
         console.error("خطا در دریافت داده‌ها:", err);
-        setLoading(false);
       });
   }, []);
 
-  if (loading) {
+
+  if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>در حال بارگذاری...</p>
+        <p>در حال آماده‌سازی محیط...</p>
       </div>
     );
   }
@@ -54,9 +58,12 @@ export default function Admin() {
     admin.performance.salary / 1000000, 
   ];
 
+  
+
+
   return (
     <div className="m-5 flex items-center justify-center  p-6">
-      <div className="p-6  mx-auto border rounded-lg shadow-md bg-white w-auto">
+      <div className={`p-6  mx-auto border rounded-lg shadow-md w-auto ${currentTheme === "dark" ? "bg-gray-500" : "bg-white"}`}>
         <div className="flex items-center mb-4">
           <Image
             src={admin.avatar}
