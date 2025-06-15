@@ -1,4 +1,4 @@
-import Index from "./login";
+import Index from "./main";
 
 export default function Home() {
   return (

@@ -1,8 +1,9 @@
+import SidebarCustomer from "./sidebarCustomer";
 import SidebarAdmin from "./sidebarAdmin";
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 
-function Layout({ children, showSidebar = false}) {
+function Layout({ children, showSidebar = false, isAdmin = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -24,9 +25,12 @@ function Layout({ children, showSidebar = false}) {
       }`}
     >
       <div className="flex flex-col min-h-screen">
-        {showSidebar && (
-          <SidebarAdmin isOpen={menuOpen} setIsOpen={setMenuOpen} />
-        )}
+        {showSidebar &&
+          (isAdmin ? (
+            <SidebarAdmin isOpen={menuOpen} setIsOpen={setMenuOpen} />
+          ) : (
+            <SidebarCustomer isOpen={menuOpen} setIsOpen={setMenuOpen} />
+          ))}
         <div className={`transition-all duration-300 flex-1`}>
           <div
             className={`${

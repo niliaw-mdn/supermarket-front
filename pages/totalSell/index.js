@@ -19,9 +19,19 @@ function TotalSale() {
 
   useEffect(() => {
     setMounted(true);
+     const token = localStorage.getItem("access_token");
+
+        if (!token) {
+          router.push("/");
+          return
+        }
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
 
     // 1. Fetch Daily Sales
-    fetch("http://localhost:5000/stats/sales_by_date")
+    fetch("http://localhost:5000/stats/sales_by_date",{headers})
       .then((res) => res.json())
       .then((data) => {
         const formattedData = data.map((item) => ({
@@ -51,7 +61,7 @@ function TotalSale() {
       });
 
     // 2. Fetch Sales by Payment Method
-    fetch("http://localhost:5000/stats/sales_by_payment_method")
+    fetch("http://localhost:5000/stats/sales_by_payment_method",{headers})
       .then((res) => res.json())
       .then((data) => {
         const formattedData = data.map((item) => ({
@@ -98,7 +108,7 @@ function TotalSale() {
       });
 
     // 3. Fetch Top Products
-    fetch("http://localhost:5000/stats/top_products")
+    fetch("http://localhost:5000/stats/top_products",{headers})
       .then((res) => res.json())
       .then((data) => {
         setBestProducts(data.map((item) => item[0] || "نامشخص"));
@@ -226,4 +236,6 @@ function TotalSale() {
 }
 
 TotalSale.showSidebar = true;
+TotalSale.isAdmin = true;
+
 export default TotalSale;

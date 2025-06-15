@@ -43,12 +43,22 @@ function Performance() {
     setMounted(true);
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem("access_token");
+
+        if (!token) {
+          router.push("/");
+        }
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
         const [dailyRes, monthlyRes, yearlyRes, totalProductsRes] =
           await Promise.all([
-            fetch("http://localhost:5000/stats/sales_by_date"),
-            fetch("http://localhost:5000/stats/sales_by_month"),
-            fetch("http://localhost:5000/stats/sales_by_year"),
-            fetch("http://localhost:5000/total_products"),
+            fetch("http://localhost:5000/stats/sales_by_date", { headers }),
+            fetch("http://localhost:5000/stats/sales_by_month", { headers }),
+            fetch("http://localhost:5000/stats/sales_by_year", { headers }),
+            fetch("http://localhost:5000/total_products", { headers }),
           ]);
 
         const dailyData = await dailyRes.json();
@@ -90,7 +100,9 @@ function Performance() {
           "#6c5ce7",
         ];
 
-        const categoryRes = await fetch("http://localhost:5000/getcategory");
+        const categoryRes = await fetch("http://localhost:5000/getcategory", {
+          headers,
+        });
         const categoryData = await categoryRes.json();
         setCategories([
           {
@@ -146,7 +158,7 @@ function Performance() {
     };
 
     fetchData();
-  }, []);
+  }, [router]);
 
   const dailyData = {
     title: "مجموع فروش روزانه",
@@ -225,22 +237,46 @@ function Performance() {
             ))}
         </Swiper>
         <div className="mt-16 flex justify-center">
-        <div className="w-[90%] grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
-        <div className={`flex-1 flex-col  border rounded-md shadow-md mt-20 ${currentTheme === "dark" ? "bg-gray-800 border-zinc-700" : "bg-white border-zinc-300"}`}>
+          <div className="w-[90%] grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-6">
+            <div
+              className={`flex-1 flex-col  border rounded-md shadow-md mt-20 ${
+                currentTheme === "dark"
+                  ? "bg-gray-800 border-zinc-700"
+                  : "bg-white border-zinc-300"
+              }`}
+            >
               <p className="w-full border-b h-14 p-3">کارکرد هفتگی</p>
               <Chart {...dailyData} />
             </div>
 
-            <div className={`flex-1 flex-col  border not-last:rounded-md shadow-md mt-20 ${currentTheme === "dark" ? "bg-gray-800 border-zinc-700" : "bg-white border-zinc-300"}`}>
+            <div
+              className={`flex-1 flex-col  border not-last:rounded-md shadow-md mt-20 ${
+                currentTheme === "dark"
+                  ? "bg-gray-800 border-zinc-700"
+                  : "bg-white border-zinc-300"
+              }`}
+            >
               <p className="w-full border-b h-14 p-3">کارکرد ماهیانه</p>
               <Chart {...monthlyData} />
             </div>
 
-            <div className={`flex-1 flex-col  border  rounded-md shadow-md mt-20 ${currentTheme === "dark" ? "bg-gray-800 border-zinc-700" : "bg-white border-zinc-300"}`}>
+            <div
+              className={`flex-1 flex-col  border  rounded-md shadow-md mt-20 ${
+                currentTheme === "dark"
+                  ? "bg-gray-800 border-zinc-700"
+                  : "bg-white border-zinc-300"
+              }`}
+            >
               <p className="w-full border-b h-14 p-3">کارکرد کلی</p>
               <Chart {...yearlyData} />
             </div>
-            <div className={`flex-1 flex-col   border  rounded-md shadow-md mt-20 ${currentTheme === "dark" ? "bg-gray-800 border-zinc-700" : "bg-white border-zinc-300"}`}>
+            <div
+              className={`flex-1 flex-col   border  rounded-md shadow-md mt-20 ${
+                currentTheme === "dark"
+                  ? "bg-gray-800 border-zinc-700"
+                  : "bg-white border-zinc-300"
+              }`}
+            >
               <ProductsTable />
             </div>
           </div>
@@ -250,4 +286,6 @@ function Performance() {
   );
 }
 Performance.showSidebar = true;
+Performance.isAdmin = true;
+
 export default Performance;

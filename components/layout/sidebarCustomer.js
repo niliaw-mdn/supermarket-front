@@ -38,7 +38,7 @@ import { HiOutlineInboxArrowDown } from "react-icons/hi2";
 import { IoSettingsOutline } from "react-icons/io5";
 import { RiPassExpiredLine } from "react-icons/ri";
 
-export default function SidebarAdmin({ isOpen, setIsOpen }) {
+export default function SidebarCustomer({ isOpen, setIsOpen }) {
   const [openUser, setOpenUser] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -55,6 +55,97 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
     support: false,
   });
   const { systemTheme, theme, setTheme } = useTheme();
+  const [customer, setCustomer] = useState(null);
+  const [error, setError] = useState("");
+
+  const handleClick = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch("http://localhost:5001/st1", {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      // First check if response is JSON
+      const contentType = res.headers.get("content-type");
+      let data;
+
+      if (contentType?.includes("application/json")) {
+        data = await res.json();
+      } else {
+        // If not JSON, get as text (for debugging)
+        const text = await res.text();
+        throw new Error(`Unexpected response: ${text.substring(0, 100)}...`);
+      }
+
+      if (!res.ok || data.status !== "success") {
+        throw new Error(data.error || "Failed to launch Streamlit");
+      }
+
+      // Handle the response
+      if (data.html_content) {
+        // Open HTML content in new window
+        const newWindow = window.open("", "_blank");
+        newWindow.document.write(data.html_content);
+      } else if (data.url) {
+        // Direct URL approach
+        window.open(data.url, "_blank");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert(`Error: ${error.message}`);
+    }
+  };
+
+  useEffect(() => {
+    const customerPhone = localStorage.getItem("phone");
+
+    if (!customerPhone) {
+      setError("شماره تماس در localStorage یافت نشد");
+      return;
+    }
+
+    // In your fetchCustomer function:
+    const fetchCustomer = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5001/get_customer_info",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customer_phone: localStorage.getItem("phone"),
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        // Process image path to ensure it starts with /customer_image/
+        let imagePath = "/pic/avatar.png";
+        if (data.image_address) {
+          imagePath = data.image_address.startsWith("/customer_image")
+            ? data.image_address
+            : `/customer_image/${data.image_address.split("/").pop()}`;
+        }
+
+        setCustomer({
+          customer_name: data.customer_name || "مشتری",
+          customer_phone: data.customer_phone,
+          image_address: imagePath,
+        });
+      } catch (err) {
+        setCustomer({
+          customer_name: "میهمان",
+          image_address: "/pic/avatar.png",
+        });
+      }
+    };
+    fetchCustomer();
+  }, []);
   const currentTheme = theme === "system" ? "light" : theme;
 
   const [mounted, setMounted] = useState(false);
@@ -96,19 +187,8 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
   useEffect(() => {
     setDropStates((prevState) => ({
       ...prevState,
-      products:
-        router.pathname === "/allProduct" || router.pathname === "/addItem",
-      reports:
-        router.pathname === "/totalSell" ||
-        router.pathname === "/popularProduct",
-
-      users: router.pathname === "/profile" || router.pathname === "/setting",
       authentication:
-        router.pathname === "/login" || router.pathname === "/singUp",
-      support:
-        router.pathname === "/sendTicket" ||
-        router.pathname === "/mngTicket" ||
-        router.pathname === "/educationCenter",
+        router.pathname === "/customerProfile" || router.pathname === "/registerCustomer",
     }));
   }, [router.pathname]);
 
@@ -257,11 +337,20 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
           <div ref={dropdownRef} className="relative flex items-center">
             <button onClick={toggleDropdownUser} className="group relative">
               <Image
-                src="/pic/avatar.png"
+                src={
+                  customer?.image_address?.startsWith("/customer_image")
+                    ? `http://localhost:5001${customer.image_address}`
+                    : customer?.image_address || "/pic/avatar.png"
+                }
                 alt="User Profile"
-                width={36}
-                height={36}
-                className="h-10 w-10 max-sm:h-7 max-sm:w-7 rounded-full object-cover saturate-50 group-hover:saturate-100"
+                width={40}
+                height={40}
+                className="h-10 w-10 rounded-full object-cover"
+                onError={(e) => {
+                  e.target.src = "/pic/avatar.png";
+                  e.target.onerror = null;
+                }}
+                unoptimized={true}
               />
             </button>
 
@@ -273,29 +362,35 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
               >
                 <li className="px-4 py-4 flex gap-1.5 items-center">
                   <Image
-                    src="/pic/avatar.png"
+                    src={
+                      customer?.image_address?.startsWith("/customer_image")
+                        ? `http://localhost:5001${customer.image_address}`
+                        : customer?.image_address || "/pic/avatar.png"
+                    }
                     alt="User Profile"
                     width={40}
                     height={40}
-                    className="h-10 w-10 rounded-md object-cover"
+                    className="h-10 w-10 rounded-full object-cover"
+                    onError={(e) => {
+                      e.target.src = "/pic/avatar.png";
+                      e.target.onerror = null;
+                    }}
+                    unoptimized={true}
                   />
                   <div className="truncate pl-4">
                     <h4
                       className={`text-base ${
                         currentTheme === "dark" ? "text-white" : "text-black"
-                      } `}
+                      }`}
                     >
-                      نیلوفر معدنی
+                      {customer?.customer_name || "میهمان"}
                       <span className="mr-2 rounded bg-green-100 px-1.5 text-xs text-green-600">
-                        جونیور
+                        {customer?.customer_phone ? "مشتری" : "میهمان"}
                       </span>
                     </h4>
-                    <a
-                      href="#"
-                      className="text-black/60 text-xs hover:text-blue-600"
-                    >
-                      admin@test.com
-                    </a>
+                    {error && (
+                      <p className="text-red-500 text-xs mt-1">{error}</p>
+                    )}
                   </div>
                 </li>
 
@@ -384,38 +479,6 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
               </div>
               <nav className="flex flex-col gap-2">
                 <ul>
-                  <li>
-                    <a
-                      href="/dashboard"
-                      onClick={toggleMenu}
-                      className={`flex justify-center items-center group ${
-                        currentTheme === "dark" ? "text-white" : "text-gray-800"
-                      }`}
-                    >
-                      <div
-                        className={`flex w-[90%] rounded-md p-2 ${
-                          currentTheme === "dark"
-                            ? "group-hover:bg-gray-800"
-                            : "group-hover:bg-gray-200"
-                        }  ${
-                          router.pathname === "/dashboard"
-                            ? currentTheme === "dark"
-                              ? "bg-gray-800"
-                              : "bg-gray-200"
-                            : ""
-                        }`}
-                      >
-                        <RiHome6Fill
-                          className="shrink-0 text-gray-500 group-hover:text-blue-700"
-                          size={22}
-                        />
-                        <span className="ltr:pl-3 rtl:pr-3 text-[#647492]">
-                          داشبورد
-                        </span>
-                      </div>
-                    </a>
-                  </li>
-
                   <h2
                     className={`w-full my-1 flex items-center px-7 py-3 uppercase ${
                       currentTheme === "dark" ? "bg-[#292f506b]" : "bg-gray-100"
@@ -424,165 +487,9 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                     <span>دسترسی ها</span>
                   </h2>
 
-                  <li className="flex flex-col items-center">
-                    <button
-                      type="button"
-                      onClick={() => toggleDropdown("products")}
-                      className={`nav-link group flex items-center justify-between w-[90%] rounded-md mb-1 p-2 group ${
-                        currentTheme === "dark"
-                          ? "hover:bg-gray-800"
-                          : "hover:bg-gray-200"
-                      }  ${
-                        router.pathname === "/allProduct" ||
-                        router.pathname === "/addIem"
-                          ? currentTheme === "dark"
-                            ? "bg-gray-800"
-                            : "bg-gray-100"
-                          : ""
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <AiFillProduct
-                          className="shrink-0 text-gray-500 group-hover:text-blue-700"
-                          size={22}
-                        />
-                        <span className="ltr:pl-3 rtl:pr-3 text-[#506690]">
-                          محصولات
-                        </span>
-                      </div>
-
-                      <div
-                        className={`transition-transform ${
-                          dropStates.products ? "rotate-270" : "rotate-0"
-                        }`}
-                      >
-                        <IoIosArrowBack />
-                      </div>
-                    </button>
-
-                    <ul
-                      className={`w-[90%] flex flex-col gap-1 overflow-hidden text-gray-500 transition-all duration-300 ${
-                        dropStates.products
-                          ? "max-h-40 opacity-100"
-                          : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <li className="group">
-                        <a
-                          href="/allProduct"
-                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
-                            currentTheme === "dark"
-                              ? "group-hover:bg-[#2527396b]"
-                              : "group-hover:bg-blue-600/10"
-                          } ${
-                            router.pathname === "/allProduct"
-                              ? "text-blue-700"
-                              : ""
-                          }`}
-                        >
-                          - موجودی ها
-                        </a>
-                      </li>
-                      <li className="group">
-                        <a
-                          href="/addItem"
-                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
-                            currentTheme === "dark"
-                              ? "group-hover:bg-[#2527396b]"
-                              : "group-hover:bg-blue-600/10"
-                          } ${
-                            router.pathname === "/addItem"
-                              ? "text-blue-700"
-                              : ""
-                          }`}
-                        >
-                          - افزودن محصول
-                        </a>
-                      </li>
-                    </ul>
-                  </li>
-
-                  <li className="flex flex-col items-center">
-                    <button
-                      type="button"
-                      onClick={() => toggleDropdown("reports")}
-                      className={`nav-link group flex items-center justify-between w-[90%] rounded-md mb-1 p-2 group ${
-                        currentTheme === "dark"
-                          ? "hover:bg-gray-800"
-                          : "hover:bg-gray-200"
-                      } ${
-                        router.pathname === "/totalSell" ||
-                        router.pathname === "/popularProduct"
-                          ? currentTheme === "dark"
-                            ? "bg-gray-800"
-                            : "bg-gray-100"
-                          : ""
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <TbFileReport
-                          className="shrink-0 text-gray-500 group-hover:text-blue-700"
-                          size={22}
-                        />
-                        <span className="ltr:pl-3 rtl:pr-3 text-[#506690]">
-                          گزارشات
-                        </span>
-                      </div>
-
-                      <div
-                        className={`transition-transform ${
-                          dropStates.reports ? "rotate-270" : "rotate-0"
-                        }`}
-                      >
-                        <IoIosArrowBack />
-                      </div>
-                    </button>
-
-                    <ul
-                      className={`w-[90%] flex flex-col gap-1 overflow-hidden text-gray-500 transition-all duration-300 ${
-                        dropStates.reports
-                          ? "max-h-40 opacity-100"
-                          : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <li className="group">
-                        <a
-                          href="/totalSell"
-                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
-                            currentTheme === "dark"
-                              ? "group-hover:bg-[#2527396b]"
-                              : "group-hover:bg-blue-600/10"
-                          } ${
-                            router.pathname === "/totalSell"
-                              ? "text-blue-700"
-                              : ""
-                          }`}
-                        >
-                          - فروش کل
-                        </a>
-                      </li>
-                      <li className="group">
-                        <a
-                          href="/popularProduct"
-                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
-                            currentTheme === "dark"
-                              ? "group-hover:bg-[#2527396b]"
-                              : "group-hover:bg-blue-600/10"
-                          } ${
-                            router.pathname === "/popularProduct"
-                              ? "text-blue-700"
-                              : ""
-                          }`}
-                        >
-                          - محصولات پرفروش
-                        </a>
-                      </li>
-                    </ul>
-                  </li>
-
                   <li>
                     <a
-                      href="/expiredProduct"
+                      href="/productCustomer"
                       onClick={toggleMenu}
                       className={`flex justify-center items-center group ${
                         currentTheme === "dark" ? "text-white" : "text-gray-800"
@@ -594,7 +501,7 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                             ? "group-hover:bg-gray-800"
                             : "group-hover:bg-gray-200"
                         } ${
-                          router.pathname === "/expiredProduct"
+                          router.pathname === "/productCustomer"
                             ? currentTheme === "dark"
                               ? "bg-gray-800"
                               : "bg-gray-200"
@@ -602,16 +509,81 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                         }
                         `}
                       >
-                        <RiPassExpiredLine
+                        <AiFillProduct
                           className="shrink-0 text-gray-500 group-hover:text-blue-700"
                           size={22}
                         />
                         <span className="ltr:pl-3 rtl:pr-3 text-[#506690]">
-                          محصولات منقضی
+                          محصولات{" "}
                         </span>
                       </div>
                     </a>
                   </li>
+                  <li>
+                    <a
+                      href="/orders"
+                      onClick={toggleMenu}
+                      className={`flex justify-center items-center group ${
+                        currentTheme === "dark" ? "text-white" : "text-gray-800"
+                      }`}
+                    >
+                      <div
+                        className={`flex w-[90%] rounded-md p-2 ${
+                          currentTheme === "dark"
+                            ? "group-hover:bg-gray-800"
+                            : "group-hover:bg-gray-200"
+                        } ${
+                          router.pathname === "/orders"
+                            ? currentTheme === "dark"
+                              ? "bg-gray-800"
+                              : "bg-gray-200"
+                            : ""
+                        }
+                        `}
+                      >
+                        <TbFileReport
+                          className="shrink-0 text-gray-500 group-hover:text-blue-700"
+                          size={22}
+                        />
+                        <span className="ltr:pl-3 rtl:pr-3 text-[#506690]">
+                          سفارشات{" "}
+                        </span>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#"
+                      onClick={handleClick}
+                      className={`flex justify-center items-center group ${
+                        currentTheme === "dark" ? "text-white" : "text-gray-800"
+                      }`}
+                    >
+                      <div
+                        className={`flex w-[90%] rounded-md p-2 ${
+                          currentTheme === "dark"
+                            ? "group-hover:bg-gray-800"
+                            : "group-hover:bg-gray-200"
+                        } ${
+                          router.pathname === "/productCustomer"
+                            ? currentTheme === "dark"
+                              ? "bg-gray-800"
+                              : "bg-gray-200"
+                            : ""
+                        }
+                        `}
+                      >
+                        <AiFillProduct
+                          className="shrink-0 text-gray-500 group-hover:text-blue-700"
+                          size={22}
+                        />
+                        <span className="ltr:pl-3 rtl:pr-3 text-[#506690]">
+                          ثبت سفارش{" "}
+                        </span>
+                      </div>
+                    </a>
+                  </li>
+
                   <h2
                     className={`w-full my-1 flex items-center px-7 py-3 uppercase ${
                       currentTheme === "dark" ? "bg-[#292f506b]" : "bg-gray-100"
@@ -619,83 +591,7 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                   >
                     <span>مدیریت کاربران</span>
                   </h2>
-                  <li className="flex flex-col items-center">
-                    <button
-                      type="button"
-                      onClick={() => toggleDropdown("users")}
-                      className={`nav-link group flex items-center justify-between w-[90%] rounded-md mb-1 p-2 group ${
-                        currentTheme === "dark"
-                          ? "hover:bg-gray-800"
-                          : "hover:bg-gray-200"
-                      } ${
-                        router.pathname === "/profile" ||
-                        router.pathname === "/setting"
-                          ? currentTheme === "dark"
-                            ? "bg-gray-800"
-                            : "bg-gray-100"
-                          : ""
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <MdPeopleAlt
-                          className="shrink-0 text-gray-500 group-hover:text-blue-700"
-                          size={22}
-                        />
-                        <span className="ltr:pl-3 rtl:pr-3 text-[#506690]">
-                          کاربران
-                        </span>
-                      </div>
-
-                      <div
-                        className={`transition-transform ${
-                          dropStates.users ? "rotate-270" : "rotate-0"
-                        }`}
-                      >
-                        <IoIosArrowBack />
-                      </div>
-                    </button>
-
-                    <ul
-                      className={`w-[90%] flex flex-col gap-1 overflow-hidden text-gray-500 transition-all duration-300 ${
-                        dropStates.users
-                          ? "max-h-40 opacity-100"
-                          : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <li className="group">
-                        <a
-                          href="/profile"
-                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
-                            currentTheme === "dark"
-                              ? "group-hover:bg-[#2527396b]"
-                              : "group-hover:bg-blue-600/10"
-                          }  ${
-                            router.pathname === "/profile"
-                              ? "text-blue-700"
-                              : ""
-                          }`}
-                        >
-                          - پروفایل
-                        </a>
-                      </li>
-                      <li className="group">
-                        <a
-                          href="/setting"
-                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
-                            currentTheme === "dark"
-                              ? "group-hover:bg-[#2527396b]"
-                              : "group-hover:bg-blue-600/10"
-                          } ${
-                            router.pathname === "/setting"
-                              ? "text-blue-700"
-                              : ""
-                          }`}
-                        >
-                          - کارکرد شما
-                        </a>
-                      </li>
-                    </ul>
-                  </li>
+                  
                   <li className="flex flex-col items-center">
                     <button
                       type="button"
@@ -705,8 +601,8 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                           ? "hover:bg-gray-800"
                           : "hover:bg-gray-200"
                       }${
-                        router.pathname === "/login" ||
-                        router.pathname === "/signUp"
+                        router.pathname === "/customerProfile" ||
+                        router.pathname === "/registerCustomer"
                           ? currentTheme === "dark"
                             ? "bg-gray-800"
                             : "bg-gray-100"
@@ -741,27 +637,29 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                     >
                       <li className="group">
                         <a
-                          href="/login"
-                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
-                            currentTheme === "dark"
-                              ? "group-hover:bg-[#2527396b]"
-                              : "group-hover:bg-blue-600/10"
-                          } ${
-                            router.pathname === "/login" ? "text-blue-700" : ""
-                          }`}
-                        >
-                          - صفحه لاگین
-                        </a>
-                      </li>
-                      <li className="group">
-                        <a
-                          href="/signUp"
+                          href="/customerProfile"
                           className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
                             currentTheme === "dark"
                               ? "group-hover:bg-[#2527396b]"
                               : "group-hover:bg-blue-600/10"
                           }  ${
-                            router.pathname === "/signUp" ? "text-blue-700" : ""
+                            router.pathname === "/customerProfile"
+                              ? "text-blue-700"
+                              : ""
+                          }`}
+                        >
+                          - پروفایل
+                        </a>
+                      </li>
+                      <li className="group">
+                        <a
+                          href="/registerCustomer"
+                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
+                            currentTheme === "dark"
+                              ? "group-hover:bg-[#2527396b]"
+                              : "group-hover:bg-blue-600/10"
+                          }  ${
+                            router.pathname === "/registerCustomer" ? "text-blue-700" : ""
                           }`}
                         >
                           - صفحه ثبت نام

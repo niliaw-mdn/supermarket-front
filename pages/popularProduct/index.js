@@ -13,11 +13,21 @@ export default function PopularProduct() {
 
     const fetchData = async () => {
       try {
+         const token = localStorage.getItem("access_token");
+
+        if (!token) {
+          router.push("/");
+          return
+        }
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
         // Fetching each API endpoint sequentially
-        const topProductsResponse = await axios.get("http://localhost:5000/stats/top_products");
-        const popularCategoriesResponse = await axios.get("http://localhost:5000/stats/most_popular_categories");
-        const peakHourResponse = await axios.get("http://localhost:5000/stats/peak_order_hour");
-        const monthlyGrowthResponse = await axios.get("http://localhost:5000/stats/monthly_sales_growth");
+        const topProductsResponse = await axios.get("http://localhost:5000/stats/top_products",{headers});
+        const popularCategoriesResponse = await axios.get("http://localhost:5000/stats/most_popular_categories",{headers});
+        const peakHourResponse = await axios.get("http://localhost:5000/stats/peak_order_hour",{headers});
+        const monthlyGrowthResponse = await axios.get("http://localhost:5000/stats/monthly_sales_growth",{headers});
 
         // Setting data from responses
         setData({
@@ -109,3 +119,4 @@ export default function PopularProduct() {
   );
 }
 PopularProduct.showSidebar = true;
+PopularProduct.isAdmin = true;

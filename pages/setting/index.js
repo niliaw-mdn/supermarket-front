@@ -115,3 +115,4 @@ export default function Admin() {
   );
 }
 Admin.showSidebar =true;
+Admin.isAdmin = true;

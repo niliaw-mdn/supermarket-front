@@ -138,9 +138,20 @@ export default function AddItem() {
     });
 
     try {
+      const token = localStorage.getItem("access_token");
+
+        if (!token) {
+          router.push("/");
+          return
+        }
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
       const res = await fetch("http://localhost:5000/insertProduct", {
         method: "POST",
         body: formDataToSend,
+        headers
       });
 
       const data = await res.json();
@@ -329,3 +340,4 @@ export default function AddItem() {
   );
 }
 AddItem.showSidebar = true;
+AddItem.isAdmin = true;

@@ -20,11 +20,24 @@ function Expired() {
   const [mounted, setMounted] = useState(false);
   const [expiringCurrentPage, setExpiringCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  const token = localStorage.getItem("access_token");
+
+  if (!token) {
+    router.push("/");
+    return;
+  }
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+  };
 
   const fetchExpiredProducts = async (page) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/expired_productspn?page=${page + 1}&limit=${itemsPerPage}`
+        `http://localhost:5000/expired_productspn?page=${
+          page + 1
+        }&limit=${itemsPerPage}`,
+        { headers }
       );
       const data = res.data;
       setExpiredProducts(data.products);
@@ -37,7 +50,10 @@ function Expired() {
   const fetchExpiringProducts = async (page) => {
     try {
       const res = await axios.get(
-        `http://localhost:5000/expiring_productspn?page=${page + 1}&limit=${itemsPerPage}`
+        `http://localhost:5000/expiring_productspn?page=${
+          page + 1
+        }&limit=${itemsPerPage}`,
+        { headers }
       );
       const data = res.data;
       setExpiringProducts(data.products);
@@ -65,7 +81,6 @@ function Expired() {
   }, []);
   if (!mounted) return null;
 
-
   const renderPagination = (
     currentPage,
     pageCount,
@@ -74,9 +89,9 @@ function Expired() {
   ) => (
     <div className="flex justify-between font-thin items-center mt-4 text-gray-400">
       <div>
-        نمایش{" "}
-        {Math.min(currentPage * itemsPerPage + 1, totalItems)} تا{" "}
-        {Math.min((currentPage + 1) * itemsPerPage, totalItems)} از {totalItems} ورودی
+        نمایش {Math.min(currentPage * itemsPerPage + 1, totalItems)} تا{" "}
+        {Math.min((currentPage + 1) * itemsPerPage, totalItems)} از {totalItems}{" "}
+        ورودی
       </div>
       <div className="flex gap-1 items-center">
         <button
@@ -127,13 +142,18 @@ function Expired() {
   );
 
   return (
-    <div dir="rtl" className={`m-5 p-6  rounded ${currentTheme === "dark" ? "bg-gray-700" : "bg-white"} `}>
+    <div
+      dir="rtl"
+      className={`m-5 p-6  rounded ${
+        currentTheme === "dark" ? "bg-gray-700" : "bg-white"
+      } `}
+    >
       <h1 className="text-2xl font-bold text-gray-800 mb-6">
         مدیریت محصولات منقضی و در حال انقضا
       </h1>
 
       {/* Expired Products */}
-      <section  className="border mb-12 p-5 shadow-md rounded-lg overflow-hidden">
+      <section className="border mb-12 p-5 shadow-md rounded-lg overflow-hidden">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
           محصولات منقضی شده
         </h2>
@@ -154,7 +174,9 @@ function Expired() {
                   <td className="px-4 py-5 text-green-600 text-right">
                     {p.price_per_unit} تومان
                   </td>
-                  <td className="px-4 py-5 text-right">{p.available_quantity}</td>
+                  <td className="px-4 py-5 text-right">
+                    {p.available_quantity}
+                  </td>
                   <td className="px-4 py-5 text-right">{p.expiration_date}</td>
                 </tr>
               ))}
@@ -170,7 +192,7 @@ function Expired() {
       </section>
 
       {/* Expiring Products */}
-      <section  className="border p-5 shadow-md rounded-lg overflow-hidden">
+      <section className="border p-5 shadow-md rounded-lg overflow-hidden">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
           محصولات در حال انقضا
         </h2>
@@ -191,7 +213,9 @@ function Expired() {
                   <td className="px-4 py-5 text-green-600 text-right">
                     {p.price_per_unit} تومان
                   </td>
-                  <td className="px-4 py-5 text-right">{p.available_quantity}</td>
+                  <td className="px-4 py-5 text-right">
+                    {p.available_quantity}
+                  </td>
                   <td className="px-4 py-5 text-right">{p.expiration_date}</td>
                 </tr>
               ))}
@@ -209,4 +233,6 @@ function Expired() {
   );
 }
 Expired.showSidebar = true;
+Expired.isAdmin = true;
+
 export default Expired;

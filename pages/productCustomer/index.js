@@ -10,7 +10,7 @@ import Modal from "@/components/template/modal";
 import { useTheme } from "next-themes";
 import ImageWithAuth from "@/components/template/productImage";
 
-function Allproduct() {
+function Index() {
   const router = useRouter();
   const { search } = router.query;
   const searchQuery = search || "";
@@ -39,66 +39,6 @@ function Allproduct() {
   const { systemTheme, theme, setTheme } = useTheme();
   const currentTheme = theme === "system" ? "light" : theme;
   const [mounted, setMounted] = useState(false);
-  const token = localStorage.getItem("access_token");
-
-  if (!token) {
-    router.push("/");
-    return;
-  }
-
-  const headers = {
-    Authorization: `Bearer ${token}`,
-  };
-
-  useEffect(() => {
-    const fetchBrands = async () => {
-      setLoadingBrands(true);
-      try {
-        console.log("Fetching brands from API...");
-        const response = await axios.get("http://localhost:5000/getBrands", {
-          timeout: 5000, // 5 second timeout
-          headers,
-        });
-
-        console.log("Brands API response:", response.data);
-
-        // Handle different response structures
-        const brandsData = response.data.brands || response.data || [];
-        setAvailableBrands(brandsData);
-      } catch (error) {
-        console.error("Failed to fetch brands:", error);
-        toast.error("Could not load brands");
-        setAvailableBrands([]);
-      } finally {
-        setLoadingBrands(false);
-      }
-    };
-
-    // Fetch brands separately from other data
-    fetchBrands();
-
-    // Fetch other data
-    const fetchOtherData = async () => {
-      try {
-        const [minPriceRes, maxPriceRes, categoriesRes] = await Promise.all([
-          axios.get("http://localhost:5000/min_price", { headers }),
-          axios.get("http://localhost:5000/max_price", { headers }),
-          axios.get("http://localhost:5000/getcategory", { headers }),
-        ]);
-
-        setFilters((prev) => ({
-          ...prev,
-          minPrice: minPriceRes.data[0] || 0,
-          maxPrice: maxPriceRes.data[0] || 0,
-        }));
-        setCategories(categoriesRes.data);
-      } catch (error) {
-        console.error("Error fetching other data:", error);
-      }
-    };
-
-    fetchOtherData();
-  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -110,23 +50,11 @@ function Allproduct() {
           limit,
         });
 
-        if (filters.minPrice > 0) params.append("minPrice", filters.minPrice);
-        if (filters.maxPrice > 0) params.append("maxPrice", filters.maxPrice);
-        if (filters.selectedCategory)
-          params.append("category_id", filters.selectedCategory);
-        if (searchQuery) params.append("search", searchQuery);
-
-        // Change from 'brands' to 'brand' to match backend expectation
-        if (filters.selectedBrands.length > 0) {
-          // Take only the first selected brand since backend expects single brand
-          params.append("brand", filters.selectedBrands[0]);
-        }
-
         console.log("Final API Params:", params.toString()); // Debug
 
         const { data } = await axios.get(
-          "http://localhost:5000/getProductspn",
-          { headers, params, paramsSerializer: (params) => params.toString() }
+          "http://localhost:5001/getProductspn",
+          { params, paramsSerializer: (params) => params.toString() }
         );
 
         setProducts(data.products);
@@ -155,39 +83,10 @@ function Allproduct() {
     setPage(1);
   };
 
-  const toggleBrandSelection = (brand) => {
-    setFilters((prev) => ({
-      ...prev,
-      selectedBrands: prev.selectedBrands.includes(brand)
-        ? prev.selectedBrands.filter((b) => b !== brand)
-        : [...prev.selectedBrands, brand],
-    }));
-    setPage(1);
-  };
-
-  const deleteProduct = async (productId) => {
-    if (!window.confirm("آیا مطمئنید میخواهید این محصول را حذف کنید؟")) return;
-    setLoading(true);
-    try {
-      await axios.post("http://localhost:5000/deleteProduct", {
-        product_id: productId,
-        headers,
-      });
-      toast.success("محصول با موفقیت حدف شد!");
-      setProducts((prev) => prev.filter((p) => p.product_id !== productId));
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      toast.error("Failed to delete product.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const openModal = async (productId) => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/getProduct/${productId}`,
-        { headers }
+        `http://localhost:5001/getProduct/${productId}`
       );
       setProductDetails(response.data);
       setIsModalOpen(true);
@@ -202,239 +101,13 @@ function Allproduct() {
     setProductDetails(null);
   };
 
-  const closeEditModal = () => {
-    setIsEditModalOpen(false);
-    setSelectedProductId(null);
-  };
   if (!mounted) return null;
   return (
     <>
       <Toaster />
-      <div className="m-5">
+      <div className="m-5 min-h-[1600px]">
         <h2 className="p-7 font-bold">محصولات موجود</h2>
-        <div className="relative w-full">
-          {/* Filters Section */}
-          <div
-            className={`border  shadow-md w-[320px] inline-block align-top ${
-              currentTheme === "dark"
-                ? "bg-gray-800 border-gray-900"
-                : "bg-white border-gray-500"
-            }`}
-          >
-            {/* Category Filter */}
-            <div className="relative w-full">
-              <button
-                onClick={() =>
-                  handleFilterChange("isCategoryOpen", !filters.isCategoryOpen)
-                }
-                className={`w-full inline-flex rounded-md px-7 pt-5 pb-3 font-medium text-gray-500 border-b-2 ${
-                  currentTheme === "dark" ? "bg-gray-800" : "bg-white"
-                }`}
-              >
-                دسته بندی
-                <svg
-                  className="w-5 h-5 ml-2 text-gray-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {filters.isCategoryOpen && (
-                <div
-                  className={`w-full  shadow-lg ring  ${
-                    currentTheme === "dark"
-                      ? "bg-gray-800 ring-gray-700"
-                      : "bg-white ring-gray-300"
-                  }`}
-                >
-                  <ul className="py-1 text-md divide-y divide-gray-600 text-gray-500 text-center">
-                    {categories.map((category) => (
-                      <li key={category.category_id}>
-                        <button
-                          onClick={() =>
-                            handleCategoryChange(category.category_id)
-                          }
-                          className={`block px-4 py-2 w-full ${
-                            currentTheme === "dark"
-                              ? "hover:bg-gray-600"
-                              : "hover:bg-gray-100"
-                          }`}
-                        >
-                          {category.category_name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            {/* Price Filter */}
-            <div className="relative w-full mt-4">
-              <button
-                onClick={() =>
-                  handleFilterChange("isPriceOpen", !filters.isPriceOpen)
-                }
-                className={`w-full inline-flex rounded-md px-7 pt-5 pb-3 font-medium text-gray-500 border-b-2 ${
-                  currentTheme === "dark" ? "bg-gray-800" : "bg-white"
-                }`}
-              >
-                محدوده قیمت
-                <svg
-                  className="w-5 h-5 ml-2 text-gray-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {filters.isPriceOpen && (
-                <div
-                  className={`w-full  shadow-lg ring  ${
-                    currentTheme === "dark"
-                      ? "bg-gray-800 ring-gray-700"
-                      : "bg-white ring-gray-300"
-                  }`}
-                >
-                  <div className="flex flex-col items-center">
-                    <div className="flex justify-between w-full mb-4">
-                      <label className="text-sm text-gray-400">
-                        حداقل قیمت:
-                        <input
-                          type="number"
-                          min="0"
-                          className="ml-2 border rounded-lg p-1 w-28"
-                          value={filters.minPrice}
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "minPrice",
-                              Number(e.target.value)
-                            )
-                          }
-                        />
-                      </label>
-                      <label className="text-sm text-gray-400">
-                        حداکثر قیمت:
-                        <input
-                          type="number"
-                          min="0"
-                          className="ml-2 border rounded-lg p-1 w-28"
-                          value={filters.maxPrice}
-                          onChange={(e) =>
-                            handleFilterChange(
-                              "maxPrice",
-                              Number(e.target.value)
-                            )
-                          }
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Brand Filter */}
-            <div className="relative w-full mt-4">
-              <button
-                onClick={() =>
-                  handleFilterChange("isBrandOpen", !filters.isBrandOpen)
-                }
-                className={`w-full inline-flex rounded-md px-7 pt-5 pb-3 font-medium text-gray-500 border-b-2 ${
-                  currentTheme === "dark" ? "bg-gray-800" : "bg-white"
-                }`}
-              >
-                برند
-                <svg
-                  className={`w-5 h-5 ml-2 text-gray-500 transition-transform ${
-                    filters.isBrandOpen ? "rotate-180" : ""
-                  }`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-
-              {filters.isBrandOpen && (
-                <div
-                  className={`w-full  shadow-lg ring  ${
-                    currentTheme === "dark"
-                      ? "bg-gray-800 ring-gray-700"
-                      : "bg-white ring-gray-300"
-                  }`}
-                >
-                  {loadingBrands ? (
-                    <div className="text-center py-4">
-                      در حال بارگذاری برندها...
-                    </div>
-                  ) : availableBrands.length > 0 ? (
-                    <ul className="py-1 text-md divide-y-2 text-gray-500">
-                      {availableBrands.map((brand) => (
-                        <li
-                          className="py-2 flex items-center justify-between"
-                          key={brand}
-                        >
-                          <span className="text-right flex-1" dir="rtl">
-                            {brand}
-                          </span>
-                          <input
-                            type="radio"
-                            name="brandFilter"
-                            checked={filters.selectedBrands[0] === brand}
-                            onChange={() =>
-                              setFilters((prev) => ({
-                                ...prev,
-                                selectedBrands: [brand],
-                              }))
-                            }
-                            className="ml-2 border rounded p-1 w-5 h-5"
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-center text-gray-500 py-2">
-                      هیچ برندی یافت نشد
-                    </p>
-                  )}
-                </div>
-              )}
-              {filters.selectedBrands.length > 0 && (
-                <button
-                  onClick={() =>
-                    setFilters((prev) => ({ ...prev, selectedBrands: [] }))
-                  }
-                  className="bg-blue-600 text-white w-full h-10 text-sm"
-                >
-                  حذف فیلتر
-                </button>
-              )}
-            </div>
-          </div>
-
+        <div className="relative w-full flex justify-center">
           {/* Products Table */}
           <div
             className={` shadow-md rounded w-[calc(100%-350px)] mr-5 inline-block align-top ${
@@ -553,19 +226,6 @@ function Allproduct() {
                     >
                       <button
                         className="relative group ml-4"
-                        onClick={() => {
-                          setSelectedProductId(post.product_id);
-                          setIsEditModalOpen(true);
-                        }}
-                      >
-                        <FaEdit className="text-lg text-green-400" size={30} />
-                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-zinc-600 text-white text-sm rounded-md px-2 py-1">
-                          ویرایش
-                        </span>
-                      </button>
-
-                      <button
-                        className="relative group ml-4"
                         onClick={() => openModal(post.product_id)}
                       >
                         <IoEyeSharp
@@ -574,18 +234,6 @@ function Allproduct() {
                         />
                         <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-zinc-600 text-white text-sm rounded-md px-2 py-1">
                           جزئیات
-                        </span>
-                      </button>
-                      <button
-                        className="relative group ml-4"
-                        onClick={() => deleteProduct(post.product_id)}
-                      >
-                        <RiDeleteBin5Fill
-                          className="text-lg text-red-400"
-                          size={30}
-                        />
-                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-zinc-600 text-white text-sm rounded-md px-2 py-1">
-                          حذف
                         </span>
                       </button>
                     </td>
@@ -777,24 +425,10 @@ function Allproduct() {
           </div>
         </Modal>
       )}
-
-      {/* Edit Product Modal */}
-      {isEditModalOpen && (
-        <Modal onClose={() => setShowModal(false)}>
-          <div className="fixed inset-0  flex justify-center items-center z-50">
-            <div className="rounded-md shadow-lg">
-              <EditProduct
-                editId={selectedProductId}
-                onClose={closeEditModal}
-              />
-            </div>
-          </div>
-        </Modal>
-      )}
     </>
   );
 }
-Allproduct.showSidebar = true;
-Allproduct.isAdmin = true;
+Index.showSidebar = true;
+Index.isAdmin = false;
 
-export default Allproduct;
+export default Index;

@@ -12,19 +12,29 @@ function EditProduct({ editId, onClose }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
+         const token = localStorage.getItem("access_token");
+
+        if (!token) {
+          router.push("/");
+          return
+        }
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
         if (editId) {
           const productRes = await axios.get(
-            `http://localhost:5000/getProduct/${editId}`
+            `http://localhost:5000/getProduct/${editId}`,{headers}
           );
           setProductData(productRes.data);
           setOriginalProductData(productRes.data); 
         }
 
-        const uomRes = await axios.get("http://localhost:5000/getUOM");
+        const uomRes = await axios.get("http://localhost:5000/getUOM",{headers});
         setUomOptions(uomRes.data);
 
         const categoryRes = await axios.get(
-          "http://localhost:5000/getcategory"
+          "http://localhost:5000/getcategory",{headers}
         );
         setCategoryOptions(categoryRes.data);
 
@@ -83,9 +93,20 @@ function EditProduct({ editId, onClose }) {
     }
 
     try {
+       const token = localStorage.getItem("access_token");
+
+        if (!token) {
+          router.push("/");
+          return
+        }
+
+        const header = {
+          Authorization: `Bearer ${token}`,
+        };
       const response = await axios.put(
         `http://localhost:5000/updateProduct/${editId}`,
         formData,
+        header,
         {
           headers: { "Content-Type": "multipart/form-data" },
         }
@@ -279,3 +300,4 @@ function EditProduct({ editId, onClose }) {
 }
 
 export default EditProduct;
+

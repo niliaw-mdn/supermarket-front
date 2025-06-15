@@ -8,6 +8,7 @@ function Index() {
   const [password, setPassword] = useState("");
   const router = useRouter();
 
+
   const loginHandler = async () => {
     const response = await fetch("http://localhost:5000/login", {
       method: "POST",
@@ -22,12 +23,12 @@ function Index() {
 
     if (response.ok) {
       const data = await response.json();
-      const token = data.jwt_token;
 
-      localStorage.setItem("jwt_token", token);
-
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
+      localStorage.setItem("email",email)
       toast.success("با موفقیت وارد شدید.");
-      router.push("./mainPage");
+      router.push("/dashboard");
     } else {
       toast.error("لطفا اطلاعات را درست وارد کنید.");
     }

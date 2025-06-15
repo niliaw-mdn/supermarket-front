@@ -6,13 +6,14 @@ import Head from 'next/head';
 
 export default function App({ Component, pageProps }) {
   const showSidebar = Component.showSidebar === true;
+  const isAdmin = Component.isAdmin || false;
 
 
   return (
     <>
     <Head> <title>فروشگاه آنلاین</title> </Head>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-    <Layout showSidebar={showSidebar}>
+    <Layout showSidebar={showSidebar} isAdmin={isAdmin}>
     <Component {...pageProps} />
       </Layout>
     </ThemeProvider>
