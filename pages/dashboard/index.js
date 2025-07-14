@@ -152,9 +152,13 @@ function Performance() {
             color: colors[index % colors.length],
           })),
         ]);
-      } catch (error) {
-        console.error("Error fetching sales data:", error);
+      } catch (err) {
+      if (err.response && err.response.status === 401) {
+        router.push("/");
+      } else {
+        console.error("Error fetching expired products:", err);
       }
+    }
     };
 
     fetchData();
@@ -196,6 +200,11 @@ function Performance() {
           loop={true}
           observer={true}
           observeParents={true}
+          onSwiper={(swiper) => {
+            setTimeout(() => {
+              swiper.update();
+            }, 100);
+          }}
           breakpoints={{
             768: {
               slidesPerView: 3,
@@ -245,7 +254,15 @@ function Performance() {
                   : "bg-white border-zinc-300"
               }`}
             >
-              <p className="w-full border-b h-14 p-3">کارکرد هفتگی</p>
+              <p
+                className={`w-full border-b h-14 p-3 ${
+                  currentTheme === "dark"
+                    ? " border-zinc-700"
+                    : " border-zinc-300"
+                }`}
+              >
+                کارکرد هفتگی
+              </p>
               <Chart {...dailyData} />
             </div>
 
@@ -256,7 +273,16 @@ function Performance() {
                   : "bg-white border-zinc-300"
               }`}
             >
-              <p className="w-full border-b h-14 p-3">کارکرد ماهیانه</p>
+              <p
+                className={`w-full border-b h-14 p-3 ${
+                  currentTheme === "dark"
+                    ? " border-zinc-700"
+                    : " border-zinc-300"
+                }`}
+              >
+                {" "}
+                ماهیانه
+              </p>
               <Chart {...monthlyData} />
             </div>
 
@@ -267,7 +293,15 @@ function Performance() {
                   : "bg-white border-zinc-300"
               }`}
             >
-              <p className="w-full border-b h-14 p-3">کارکرد کلی</p>
+              <p
+                className={`w-full border-b h-14 p-3 ${
+                  currentTheme === "dark"
+                    ? " border-zinc-700"
+                    : " border-zinc-300"
+                }`}
+              >
+                کارکرد کلی
+              </p>
               <Chart {...yearlyData} />
             </div>
             <div

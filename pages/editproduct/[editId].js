@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
+import { useTheme } from "next-themes";
 
 function EditProduct({ editId, onClose }) {
   const [productData, setProductData] = useState({});
@@ -8,15 +9,20 @@ function EditProduct({ editId, onClose }) {
   const [uomOptions, setUomOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [originalProductData, setOriginalProductData] = useState({});
+  const { systemTheme, theme, setTheme } = useTheme();
+  const currentTheme = theme === "system" ? "light" : theme;
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
     const fetchData = async () => {
       try {
-         const token = localStorage.getItem("access_token");
+        const token = localStorage.getItem("access_token");
 
         if (!token) {
           router.push("/");
-          return
+          return;
         }
 
         const headers = {
@@ -24,24 +30,32 @@ function EditProduct({ editId, onClose }) {
         };
         if (editId) {
           const productRes = await axios.get(
-            `http://localhost:5000/getProduct/${editId}`,{headers}
+            `http://localhost:5000/getProduct/${editId}`,
+            { headers }
           );
           setProductData(productRes.data);
-          setOriginalProductData(productRes.data); 
+          setOriginalProductData(productRes.data);
         }
 
-        const uomRes = await axios.get("http://localhost:5000/getUOM",{headers});
+        const uomRes = await axios.get("http://localhost:5000/getUOM", {
+          headers,
+        });
         setUomOptions(uomRes.data);
 
         const categoryRes = await axios.get(
-          "http://localhost:5000/getcategory",{headers}
+          "http://localhost:5000/getcategory",
+          { headers }
         );
         setCategoryOptions(categoryRes.data);
 
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setLoading(false);
+        if (err.response && err.response.status === 401) {
+          router.push("/");
+        } else {
+          console.error("Error fetching expired products:", err);
+          setLoading(false);
+        }
       }
     };
 
@@ -52,7 +66,6 @@ function EditProduct({ editId, onClose }) {
     e.preventDefault();
 
     const formData = new FormData();
-
 
     if (productData.name) formData.append("name", productData.name);
     if (productData.price_per_unit)
@@ -80,7 +93,6 @@ function EditProduct({ editId, onClose }) {
     if (productData.category_id)
       formData.append("category_id", parseInt(productData.category_id));
 
-  
     if (
       productData.expiration_date &&
       productData.expiration_date !== originalProductData.expiration_date
@@ -93,16 +105,16 @@ function EditProduct({ editId, onClose }) {
     }
 
     try {
-       const token = localStorage.getItem("access_token");
+      const token = localStorage.getItem("access_token");
 
-        if (!token) {
-          router.push("/");
-          return
-        }
+      if (!token) {
+        router.push("/");
+        return;
+      }
 
-        const header = {
-          Authorization: `Bearer ${token}`,
-        };
+      const header = {
+        Authorization: `Bearer ${token}`,
+      };
       const response = await axios.put(
         `http://localhost:5000/updateProduct/${editId}`,
         formData,
@@ -115,163 +127,182 @@ function EditProduct({ editId, onClose }) {
       toast.success("محصول با موفقیت بروزرسانی شد.");
       onClose();
 
-      
       setProductData((prev) => ({
         ...prev,
         image_address: response.data.image_address,
       }));
     } catch (err) {
-      console.error("Error updating product:", err);
-      toast.error("بروزرسانی محصول به مشکل برخورد، دوباره تلاش کنید.");
+      if (err.response && err.response.status === 401) {
+        router.push("/");
+      } else {
+        toast.error("بروزرسانی محصول به مشکل برخورد، دوباره تلاش کنید.");
+      }
     }
   };
-
   if (loading) return <div>Loading...</div>;
-
+  if (!mounted) return null;
   return (
     <>
       <Toaster />
-      <div className="flex bg-slate-50 justify-center items-center">
-        <div className="border-2 w-96 relative">
+      <div>
+        <div className="relative w-full max-w-3xl bg-inherit rounded-xl shadow-xl p-6 space-y-6">
+          {/* Close Button */}
           <button
-            className="absolute top-3 left-3 text-zinc-500 hover:text-zinc-900"
+            className="absolute top-4 left-4 text-zinc-500 hover:text-red-500 text-xl"
             onClick={onClose}
           >
             ✖
           </button>
 
-          <h2 className="text-center font-bold py-5">بروزرسانی محصول</h2>
-          <form onSubmit={handleUpdate} className="p-4 flex flex-col h-full">
-            <div className="grid grid-cols-2 gap-x-8">
-              <div>
-                {[
-                  { label: "نام محصول", key: "name", type: "text" },
-                  {
-                    label: "واحد اندازه گیری",
-                    key: "uom_id",
-                    type: "select",
-                    options: uomOptions,
-                  },
-                  { label: "برند", key: "manufacturer_name", type: "text" },
-                  { label: "قیمت فروش", key: "purchase_price", type: "number" },
-                ].map((field) => (
-                  <div className="flex flex-col pb-5" key={field.key}>
-                    <label>{field.label}:</label>
-                    {field.type === "select" ? (
-                      <select
-                        className="border-2 border-slate-300 rounded-md m-3 p-2"
-                        value={productData[field.key] || ""}
-                        onChange={(e) =>
-                          setProductData({
-                            ...productData,
-                            [field.key]: e.target.value,
-                          })
-                        }
-                        required
-                      >
-                        <option value="">انتخاب {field.label}</option>
-                        {field.options.map((option) => (
-                          <option
-                            key={option.uom_id || option.category_id}
-                            value={option.uom_id || option.category_id}
-                          >
-                            {option.uom_name || option.category_name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        className="border-2 border-slate-300 rounded-md m-3 p-2"
-                        type={field.type}
-                        value={productData[field.key] || ""}
-                        onChange={(e) =>
-                          setProductData({
-                            ...productData,
-                            [field.key]: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+          {/* Title */}
+          <h2 className="text-center text-xl font-bold">بروزرسانی محصول</h2>
 
-              <div>
-                {[
-                  { label: "وزن", key: "weight", type: "number" },
-                  {
-                    label: "دسته بندی",
-                    key: "category_id",
-                    type: "select",
-                    options: categoryOptions,
-                  },
-                  { label: "قیمت", key: "price_per_unit", type: "number" },
-                  {
-                    label: "موجودی",
-                    key: "available_quantity",
-                    type: "number",
-                  },
-                ].map((field) => (
-                  <div className="flex flex-col pb-5" key={field.key}>
-                    <label>{field.label}:</label>
-                    {field.type === "select" ? (
-                      <select
-                        className="border-2 border-slate-300 rounded-md m-3 p-2"
-                        value={productData[field.key] || ""}
-                        onChange={(e) =>
-                          setProductData({
-                            ...productData,
-                            [field.key]: e.target.value,
-                          })
-                        }
-                        required
-                      >
-                        <option value="">انتخاب {field.label}</option>
-                        {field.options.map((option) => (
-                          <option
-                            key={option.uom_id || option.category_id}
-                            value={option.uom_id || option.category_id}
-                          >
-                            {option.uom_name || option.category_name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        className="border-2 border-slate-300 rounded-md m-3 p-2"
-                        type={field.type}
-                        value={productData[field.key] || ""}
-                        onChange={(e) =>
-                          setProductData({
-                            ...productData,
-                            [field.key]: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+          {/* Form */}
+          <form onSubmit={handleUpdate} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
+              {[
+                { label: "نام محصول", key: "name", type: "text" },
+                {
+                  label: "واحد اندازه‌گیری",
+                  key: "uom_id",
+                  type: "select",
+                  options: uomOptions,
+                },
+                { label: "برند", key: "manufacturer_name", type: "text" },
+                { label: "قیمت فروش", key: "purchase_price", type: "number" },
+              ].map((field) => (
+                <div key={field.key} className="flex flex-col space-y-1">
+                  <label className="text-sm font-medium">{field.label}:</label>
+                  {field.type === "select" ? (
+                    <select
+                      className={`p-2 rounded border ${
+                        currentTheme === "dark"
+                          ? "bg-gray-800 border-gray-600"
+                          : "bg-white border-gray-300 "
+                      }`}
+                      value={productData[field.key] || ""}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          [field.key]: e.target.value,
+                        })
+                      }
+                      required
+                    >
+                      <option value="">انتخاب {field.label}</option>
+                      {field.options.map((option) => (
+                        <option
+                          key={option.uom_id || option.category_id}
+                          value={option.uom_id || option.category_id}
+                        >
+                          {option.uom_name || option.category_name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type}
+                      className={`p-2 rounded border  ${
+                        currentTheme === "dark"
+                          ? "bg-gray-800 border-gray-600"
+                          : "bg-white border-gray-300 "
+                      }`}
+                      value={productData[field.key] || ""}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          [field.key]: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  )}
+                </div>
+              ))}
+
+              {/* Right Column */}
+              {[
+                { label: "وزن", key: "weight", type: "number" },
+                {
+                  label: "دسته‌بندی",
+                  key: "category_id",
+                  type: "select",
+                  options: categoryOptions,
+                },
+                { label: "قیمت", key: "price_per_unit", type: "number" },
+                { label: "موجودی", key: "available_quantity", type: "number" },
+              ].map((field) => (
+                <div key={field.key} className="flex flex-col space-y-1">
+                  <label className="text-sm font-medium">{field.label}:</label>
+                  {field.type === "select" ? (
+                    <select
+                      className={`p-2 rounded border ${
+                        currentTheme === "dark"
+                          ? "bg-gray-800 border-gray-600"
+                          : "bg-white border-gray-300 "
+                      }`}
+                      value={productData[field.key] || ""}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          [field.key]: e.target.value,
+                        })
+                      }
+                      required
+                    >
+                      <option value="">انتخاب {field.label}</option>
+                      {field.options.map((option) => (
+                        <option
+                          key={option.uom_id || option.category_id}
+                          value={option.uom_id || option.category_id}
+                        >
+                          {option.uom_name || option.category_name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type}
+                      className={`p-2 rounded border  ${
+                        currentTheme === "dark"
+                          ? "bg-gray-800 border-gray-600"
+                          : "bg-white border-gray-300 "
+                      }`}
+                      value={productData[field.key] || ""}
+                      onChange={(e) =>
+                        setProductData({
+                          ...productData,
+                          [field.key]: e.target.value,
+                        })
+                      }
+                      required
+                    />
+                  )}
+                </div>
+              ))}
 
               {/* Image Upload */}
-              <div className="flex flex-col pb-5">
-                <label>تصویر محصول:</label>
+              <div className="flex flex-col space-y-1 md:col-span-1">
+                <label className="text-sm font-medium">تصویر محصول:</label>
                 <input
-                  className="border-2 border-slate-300 rounded-md m-3 p-2"
                   type="file"
                   accept="image/*"
                   onChange={(e) =>
                     setProductData({ ...productData, image: e.target.files[0] })
                   }
+                  className={`p-2 rounded border ${
+                    currentTheme === "dark"
+                      ? "bg-gray-800 border-gray-600"
+                      : "bg-white border-gray-300 "
+                  }`}
                 />
               </div>
 
-              <div className="flex flex-col pb-5">
-                <label>تاریخ انقضا:</label>
+              {/* Expiration Date */}
+              <div className="flex flex-col space-y-1 md:col-span-1">
+                <label className="text-sm font-medium">تاریخ انقضا:</label>
                 <input
-                  className="border-2 border-slate-300 rounded-md m-3 p-2"
                   type="date"
                   value={productData.expiration_date || ""}
                   onChange={(e) =>
@@ -280,16 +311,22 @@ function EditProduct({ editId, onClose }) {
                       expiration_date: e.target.value,
                     })
                   }
+                  className={`p-2 rounded border ${
+                    currentTheme === "dark"
+                      ? "bg-gray-800 border-gray-600"
+                      : "bg-white border-gray-300 "
+                  }`}
                 />
               </div>
             </div>
 
-            <div className="flex justify-center p-4 mt-auto bg-white">
+            {/* Submit Button */}
+            <div className="pt-4">
               <button
                 type="submit"
-                className="bg-blue-500 text-white p-2 rounded w-full"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition"
               >
-                بروزرسانی
+                بروزرسانی محصول
               </button>
             </div>
           </form>
@@ -300,4 +337,3 @@ function EditProduct({ editId, onClose }) {
 }
 
 export default EditProduct;
-

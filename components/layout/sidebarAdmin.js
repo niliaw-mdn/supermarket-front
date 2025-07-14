@@ -181,26 +181,6 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
             )}
           </div>
 
-          <button
-            className={`relative w-10 h-10 max-sm:h-7 max-sm:w-7 p-2 flex justify-center items-center rounded-full hover:text-blue-900 ${
-              currentTheme === "dark"
-                ? "bg-[#282b3b] text-[#d0d2d6]"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            <PiNotePencilDuotone className="text-xl" />
-          </button>
-
-          <button
-            className={`relative w-10 h-10 max-sm:h-7 max-sm:w-7 p-2 flex justify-center items-center rounded-full hover:text-blue-900 ${
-              currentTheme === "dark"
-                ? "bg-[#282b3b] text-[#d0d2d6]"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            <BsChatText className="text-xl" />
-          </button>
-
           <div className="relative flex items-center">
             <button
               onClick={() => setOpen(!open)}
@@ -751,20 +731,6 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                           }`}
                         >
                           - صفحه لاگین
-                        </a>
-                      </li>
-                      <li className="group">
-                        <a
-                          href="/signUp"
-                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
-                            currentTheme === "dark"
-                              ? "group-hover:bg-[#2527396b]"
-                              : "group-hover:bg-blue-600/10"
-                          }  ${
-                            router.pathname === "/signUp" ? "text-blue-700" : ""
-                          }`}
-                        >
-                          - صفحه ثبت نام
                         </a>
                       </li>
                     </ul>

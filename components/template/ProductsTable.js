@@ -97,14 +97,23 @@ const ProductsTable = () => {
           </tr>
         </thead>
         <tbody>
-          <tr className=" border-b border-b-gray-400">
+          <tr
+            className={` border-b ${
+              currentTheme === "dark" ? "border-zinc-700" : "border-zinc-300"
+            }`}
+          >
             <td className="py-2 text-center px-3">سود کل</td>
             <td className="py-2 text-center px-3">{statistics.totalProfit}</td>
             <td className="py-2 text-center px-3 flex flex-row text-green-600">
               +<PiChartLineUpBold className="text-green-600" size={30} />
             </td>
           </tr>
-          <tr className=" border-b border-b-gray-400">
+          <tr
+            className={` border-b ${
+              currentTheme === "dark" ? "border-zinc-700" : "border-zinc-300"
+            }`}
+          >
+            {" "}
             <td className="py-2 text-center px-3">میانگین تخفیف</td>
             <td className="py-2 text-center px-3">
               {statistics.averageDiscount}
@@ -113,7 +122,12 @@ const ProductsTable = () => {
               +<PiChartLineDownBold className="text-red-700" size={30} />
             </td>
           </tr>
-          <tr className=" border-b border-b-gray-400">
+          <tr
+            className={` border-b ${
+              currentTheme === "dark" ? "border-zinc-700" : "border-zinc-300"
+            }`}
+          >
+            {" "}
             <td className="py-2 text-center px-3">
               تعداد محصولات با سود بیشتر از1000 تومان
             </td>
@@ -124,21 +138,36 @@ const ProductsTable = () => {
               +<PiChartLineUpBold className="text-green-600" size={30} />
             </td>
           </tr>
-          <tr className=" border-b border-b-gray-400">
+          <tr
+            className={` border-b ${
+              currentTheme === "dark" ? "border-zinc-700" : "border-zinc-300"
+            }`}
+          >
+            {" "}
             <td className="py-2 text-center px-3">حداکثر سود</td>
             <td className="py-2 text-center px-3">{statistics.maxProfit}</td>
             <td className="py-2 text-center px-3 flex flex-row text-green-600">
               +<PiChartLineUpBold className="text-green-600" size={30} />
             </td>
           </tr>
-          <tr className=" border-b border-b-gray-400">
+          <tr
+            className={` border-b ${
+              currentTheme === "dark" ? "border-zinc-700" : "border-zinc-300"
+            }`}
+          >
+            {" "}
             <td className="py-2 text-center px-3">حداقل سود</td>
             <td className="py-2 text-center px-3">{statistics.minProfit}</td>
             <td className="py-2 text-center px-3 flex flex-row text-green-600">
               +<PiChartLineUpBold className="text-green-600" size={30} />
             </td>
           </tr>
-          <tr className=" border-b border-b-gray-400">
+          <tr
+            className={` border-b ${
+              currentTheme === "dark" ? "border-zinc-700" : "border-zinc-300"
+            }`}
+          >
+            {" "}
             <td className="py-2 text-center px-3">تعداد محصولات با سود منفی</td>
             <td className="py-2 text-center px-3">
               {statistics.negativeProfitProducts}
@@ -147,7 +176,12 @@ const ProductsTable = () => {
               +<PiChartLineDownBold className="text-red-700" size={30} />
             </td>
           </tr>
-          <tr className=" border-b border-b-gray-400">
+          <tr
+            className={` border-b ${
+              currentTheme === "dark" ? "border-zinc-700" : "border-zinc-300"
+            }`}
+          >
+            {" "}
             <td className="py-2 text-center px-3">
               تعداد کل واحدهای فروخته شده
             </td>
@@ -158,7 +192,12 @@ const ProductsTable = () => {
               +<PiChartLineUpBold className="text-green-600" size={30} />
             </td>
           </tr>
-          <tr className=" border-b border-b-gray-400">
+          <tr
+            className={` border-b ${
+              currentTheme === "dark" ? "border-zinc-700" : "border-zinc-300"
+            }`}
+          >
+            {" "}
             <td className="py-2 text-center px-3">
               بیشترین تعداد واحد فروخته شده
             </td>

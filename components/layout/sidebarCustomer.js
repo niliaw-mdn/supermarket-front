@@ -36,7 +36,9 @@ import { GrNotes } from "react-icons/gr";
 import { IoPersonOutline } from "react-icons/io5";
 import { HiOutlineInboxArrowDown } from "react-icons/hi2";
 import { IoSettingsOutline } from "react-icons/io5";
-import { RiPassExpiredLine } from "react-icons/ri";
+import { TbShoppingCartCheck } from "react-icons/tb";
+import { LuFolderCog } from "react-icons/lu";
+
 
 export default function SidebarCustomer({ isOpen, setIsOpen }) {
   const [openUser, setOpenUser] = useState(false);
@@ -188,7 +190,8 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
     setDropStates((prevState) => ({
       ...prevState,
       authentication:
-        router.pathname === "/customerProfile" || router.pathname === "/registerCustomer",
+        router.pathname === "/customerProfile" ||
+        router.pathname === "/registerCustomer",
     }));
   }, [router.pathname]);
 
@@ -260,26 +263,6 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
               </div>
             )}
           </div>
-
-          <button
-            className={`relative w-10 h-10 max-sm:h-7 max-sm:w-7 p-2 flex justify-center items-center rounded-full hover:text-blue-900 ${
-              currentTheme === "dark"
-                ? "bg-[#282b3b] text-[#d0d2d6]"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            <PiNotePencilDuotone className="text-xl" />
-          </button>
-
-          <button
-            className={`relative w-10 h-10 max-sm:h-7 max-sm:w-7 p-2 flex justify-center items-center rounded-full hover:text-blue-900 ${
-              currentTheme === "dark"
-                ? "bg-[#282b3b] text-[#d0d2d6]"
-                : "bg-gray-100 text-gray-700"
-            }`}
-          >
-            <BsChatText className="text-xl" />
-          </button>
 
           <div className="relative flex items-center">
             <button
@@ -396,7 +379,7 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
 
                 <li>
                   <Link
-                    href="/profile"
+                    href="/customerProfile"
                     className="flex items-center gap-1 px-4 py-1 hover:text-blue-600 hover:bg-blue-300/10"
                     onClick={() => setOpenUser(false)}
                   >
@@ -409,27 +392,14 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
 
                 <li>
                   <Link
-                    href="/setting"
-                    className="flex items-center gap-1 px-4 py-3 hover:text-blue-600 hover:bg-blue-300/10"
-                    onClick={() => setOpenUser(false)}
-                  >
-                    <span className="mr-2">
-                      <IoSettingsOutline size={20} />
-                    </span>
-                    <p> ویرایش حساب کاربری</p>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    href="/apps-mailbox"
+                    href="/orders"
                     className="flex items-center gap-1 px-4 py-3 hover:text-blue-600 hover:bg-blue-300/10"
                     onClick={() => setOpenUser(false)}
                   >
                     <span className="mr-2">
                       <HiOutlineInboxArrowDown size={20} />
                     </span>
-                    <p> صندوق ورودی</p>
+                    <p> لیست سفارشات</p>
                   </Link>
                 </li>
               </ul>
@@ -521,6 +491,39 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
                   </li>
                   <li>
                     <a
+                      href="/oldestPurchase"
+                      onClick={toggleMenu}
+                      className={`flex justify-center items-center group ${
+                        currentTheme === "dark" ? "text-white" : "text-gray-800"
+                      }`}
+                    >
+                      <div
+                        className={`flex w-[90%] rounded-md p-2 ${
+                          currentTheme === "dark"
+                            ? "group-hover:bg-gray-800"
+                            : "group-hover:bg-gray-200"
+                        } ${
+                          router.pathname === "/oldestPurchase"
+                            ? currentTheme === "dark"
+                              ? "bg-gray-800"
+                              : "bg-gray-200"
+                            : ""
+                        }
+                        `}
+                      >
+                        <LuFolderCog
+
+                          className="shrink-0 text-gray-500 group-hover:text-blue-700"
+                          size={22}
+                        />
+                        <span className="ltr:pl-3 rtl:pr-3 text-[#506690]">
+                          قدیمی‌ترین سفارشات
+                        </span>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <a
                       href="/orders"
                       onClick={toggleMenu}
                       className={`flex justify-center items-center group ${
@@ -564,16 +567,10 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
                           currentTheme === "dark"
                             ? "group-hover:bg-gray-800"
                             : "group-hover:bg-gray-200"
-                        } ${
-                          router.pathname === "/productCustomer"
-                            ? currentTheme === "dark"
-                              ? "bg-gray-800"
-                              : "bg-gray-200"
-                            : ""
                         }
                         `}
                       >
-                        <AiFillProduct
+                        <TbShoppingCartCheck
                           className="shrink-0 text-gray-500 group-hover:text-blue-700"
                           size={22}
                         />
@@ -591,7 +588,7 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
                   >
                     <span>مدیریت کاربران</span>
                   </h2>
-                  
+
                   <li className="flex flex-col items-center">
                     <button
                       type="button"
@@ -659,7 +656,9 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
                               ? "group-hover:bg-[#2527396b]"
                               : "group-hover:bg-blue-600/10"
                           }  ${
-                            router.pathname === "/registerCustomer" ? "text-blue-700" : ""
+                            router.pathname === "/registerCustomer"
+                              ? "text-blue-700"
+                              : ""
                           }`}
                         >
                           - صفحه ثبت نام

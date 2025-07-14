@@ -1,4 +1,3 @@
-// components/template/CombinedExpiredExpiring.js
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -15,16 +14,17 @@ function Expired() {
   const [expiredPageCount, setExpiredPageCount] = useState(0);
   const [expiringPageCount, setExpiringPageCount] = useState(0);
   const [expiredCurrentPage, setExpiredCurrentPage] = useState(0);
-  const { systemTheme, theme, setTheme } = useTheme();
+  const [expiringCurrentPage, setExpiringCurrentPage] = useState(0);
+  const { theme } = useTheme();
   const currentTheme = theme === "system" ? "light" : theme;
   const [mounted, setMounted] = useState(false);
-  const [expiringCurrentPage, setExpiringCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  const token = localStorage.getItem("access_token");
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
 
   if (!token) {
     router.push("/");
-    return;
+    return null;
   }
 
   const headers = {
@@ -43,7 +43,11 @@ function Expired() {
       setExpiredProducts(data.products);
       setExpiredPageCount(data.total_pages);
     } catch (err) {
-      console.error("Error fetching expired products:", err);
+      if (err.response && err.response.status === 401) {
+        router.push("/");
+      } else {
+        console.error("Error fetching expired products:", err);
+      }
     }
   };
 
@@ -59,7 +63,11 @@ function Expired() {
       setExpiringProducts(data.products);
       setExpiringPageCount(data.total_pages);
     } catch (err) {
-      console.error("Error fetching expiring products:", err);
+      if (err.response && err.response.status === 401) {
+        router.push("/");
+      } else {
+        console.error("Error fetching expired products:", err);
+      }
     }
   };
 
@@ -75,11 +83,27 @@ function Expired() {
 
   useEffect(() => {
     setMounted(true);
-
     fetchExpiredProducts(expiredCurrentPage);
     fetchExpiringProducts(expiringCurrentPage);
   }, []);
+
   if (!mounted) return null;
+
+  const baseBg = currentTheme === "dark" ? "bg-gray-900" : "bg-white";
+  const baseText = currentTheme === "dark" ? "text-gray-200" : "text-gray-900";
+  const borderBase =
+    currentTheme === "dark" ? "border-gray-700" : "border-gray-300";
+  const headerExpiredBg = currentTheme === "dark" ? "bg-red-700" : "bg-red-600";
+  const headerExpiringBg =
+    currentTheme === "dark" ? "bg-yellow-700" : "bg-yellow-400";
+  const expiredRowEvenBg =
+    currentTheme === "dark"
+      ? "even:bg-gray-800 hover:bg-red-600/40"
+      : "even:bg-red-50 hover:bg-red-100";
+  const expiringRowEvenBg =
+    currentTheme === "dark"
+      ? "even:bg-gray-800 hover:bg-yellow-600/40"
+      : "even:bg-yellow-50 hover:bg-yellow-100";
 
   const renderPagination = (
     currentPage,
@@ -87,24 +111,38 @@ function Expired() {
     onPageChange,
     totalItems
   ) => (
-    <div className="flex justify-between font-thin items-center mt-4 text-gray-400">
-      <div>
+    <div
+      className={`flex flex-col sm:flex-row justify-between items-center text-sm mt-4 gap-2 sm:gap-0 ${
+        currentTheme === "dark" ? "text-gray-400" : "text-gray-600"
+      }`}
+    >
+      <div className="select-none">
         نمایش {Math.min(currentPage * itemsPerPage + 1, totalItems)} تا{" "}
         {Math.min((currentPage + 1) * itemsPerPage, totalItems)} از {totalItems}{" "}
         ورودی
       </div>
-      <div className="flex gap-1 items-center">
+      <nav className="flex gap-1 items-center" aria-label="Pagination">
         <button
           onClick={() => onPageChange(0)}
           disabled={currentPage === 0}
-          className="px-2 py-2 rounded-full hover:bg-blue-600 hover:text-white bg-gray-300"
+          aria-label="رفتن به صفحه اول"
+          className={`p-2 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-600 hover:text-white ${
+            currentTheme === "dark"
+              ? "bg-gray-700 text-gray-300"
+              : "bg-gray-200 text-gray-700"
+          }`}
         >
           <RiArrowRightDoubleFill size={20} />
         </button>
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 0}
-          className="px-2 py-2 rounded-full hover:bg-blue-600 hover:text-white bg-gray-300"
+          aria-label="صفحه قبل"
+          className={`p-2 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-600 hover:text-white ${
+            currentTheme === "dark"
+              ? "bg-gray-700 text-gray-300"
+              : "bg-gray-200 text-gray-700"
+          }`}
         >
           <RiArrowRightSLine size={20} />
         </button>
@@ -113,10 +151,13 @@ function Expired() {
           <button
             key={i}
             onClick={() => onPageChange(i)}
-            className={`px-4 py-2 rounded-full text-sm transition-all duration-200 ${
+            aria-current={currentPage === i ? "page" : undefined}
+            className={`min-w-[36px] px-3 py-1 rounded-full text-sm font-medium transition ${
               currentPage === i
-                ? "bg-blue-600 text-white"
-                : "bg-gray-300 text-black hover:bg-blue-600 hover:text-white"
+                ? "bg-blue-600 text-white shadow-md"
+                : currentTheme === "dark"
+                ? "bg-gray-700 text-gray-300 hover:bg-blue-600 hover:text-white"
+                : "bg-gray-200 text-gray-700 hover:bg-blue-600 hover:text-white"
             }`}
           >
             {i + 1}
@@ -126,58 +167,75 @@ function Expired() {
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === pageCount - 1}
-          className="px-2 py-2 rounded-full hover:bg-blue-600 hover:text-white bg-gray-300"
+          aria-label="صفحه بعد"
+          className={`p-2 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-600 hover:text-white ${
+            currentTheme === "dark"
+              ? "bg-gray-700 text-gray-300"
+              : "bg-gray-200 text-gray-700"
+          }`}
         >
           <RiArrowLeftSLine size={20} />
         </button>
         <button
           onClick={() => onPageChange(pageCount - 1)}
           disabled={currentPage === pageCount - 1}
-          className="px-2 py-2 rounded-full hover:bg-blue-600 hover:text-white bg-gray-300"
+          aria-label="رفتن به صفحه آخر"
+          className={`p-2 rounded-full transition-colors disabled:opacity-40 disabled:cursor-not-allowed hover:bg-blue-600 hover:text-white ${
+            currentTheme === "dark"
+              ? "bg-gray-700 text-gray-300"
+              : "bg-gray-200 text-gray-700"
+          }`}
         >
           <RiArrowLeftDoubleFill size={20} />
         </button>
-      </div>
+      </nav>
     </div>
   );
 
   return (
     <div
       dir="rtl"
-      className={`m-5 p-6  rounded ${
-        currentTheme === "dark" ? "bg-gray-700" : "bg-white"
-      } `}
+      className={`m-5 p-6 rounded-lg shadow-lg ${baseBg} ${baseText}`}
     >
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
+      <h1 className="text-3xl font-bold mb-8 text-center">
         مدیریت محصولات منقضی و در حال انقضا
       </h1>
 
       {/* Expired Products */}
-      <section className="border mb-12 p-5 shadow-md rounded-lg overflow-hidden">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          محصولات منقضی شده
-        </h2>
-        <div className=" shadow-md rounded-lg overflow-hidden">
-          <table className="min-w-full">
-            <thead className="bg-red-400 text-white h-12">
+      <section className="mb-12">
+        <h2>محصولات منقضی شده</h2>
+        <div
+          className={`overflow-x-auto rounded-lg shadow border ${borderBase}`}
+        >
+          <table className="min-w-full text-sm text-right">
+            <thead className={`${headerExpiredBg} text-white h-14`}>
               <tr>
-                <th className="px-4 py-2 text-right font-thin">نام محصول</th>
-                <th className="px-4 py-2 text-right font-thin">قیمت</th>
-                <th className="px-4 py-2 text-right font-thin">تعداد موجود</th>
-                <th className="px-4 py-2 text-right font-thin">تاریخ انقضا</th>
+                <th className="px-6 py-3 font-light whitespace-nowrap">
+                  نام محصول
+                </th>
+                <th className="px-6 py-3 font-light whitespace-nowrap">قیمت</th>
+                <th className="px-6 py-3 font-light whitespace-nowrap">
+                  تعداد موجود
+                </th>
+                <th className="px-6 py-3 font-light whitespace-nowrap">
+                  تاریخ انقضا
+                </th>
               </tr>
             </thead>
             <tbody>
               {expiredProducts.map((p) => (
-                <tr key={p.product_id} className="border-b font-thin">
-                  <td className="px-4 py-5 text-right">{p.name}</td>
-                  <td className="px-4 py-5 text-green-600 text-right">
-                    {p.price_per_unit} تومان
+                <tr
+                  key={p.product_id}
+                  className={`border-b transition-colors cursor-pointer ${expiredRowEvenBg}`}
+                >
+                  <td className="px-6 py-4 font-medium">{p.name}</td>
+                  <td className="px-6 py-4 text-green-500 font-semibold">
+                    {p.price_per_unit.toLocaleString()} تومان
                   </td>
-                  <td className="px-4 py-5 text-right">
-                    {p.available_quantity}
+                  <td className="px-6 py-4">
+                    {p.available_quantity.toLocaleString()}
                   </td>
-                  <td className="px-4 py-5 text-right">{p.expiration_date}</td>
+                  <td className="px-6 py-4">{p.expiration_date}</td>
                 </tr>
               ))}
             </tbody>
@@ -192,31 +250,46 @@ function Expired() {
       </section>
 
       {/* Expiring Products */}
-      <section className="border p-5 shadow-md rounded-lg overflow-hidden">
-        <h2 className="text-xl font-semibold text-gray-700 mb-4">
+      <section>
+        <h2
+          className={`text-2xl font-semibold mb-4 border-b-4 inline-block pb-2 ${
+            currentTheme === "dark" ? "border-yellow-500" : "border-yellow-600"
+          }`}
+        >
           محصولات در حال انقضا
         </h2>
-        <div>
-          <table className="min-w-full">
-            <thead className="bg-orange-400/50 text-white h-12">
+        <div
+          className={`overflow-x-auto rounded-lg shadow border ${borderBase}`}
+        >
+          <table className="min-w-full text-sm text-right">
+            <thead className={`${headerExpiringBg} text-white h-14`}>
               <tr>
-                <th className="px-4 py-2 text-right font-thin">نام محصول</th>
-                <th className="px-4 py-2 text-right font-thin">قیمت</th>
-                <th className="px-4 py-2 text-right font-thin">تعداد موجود</th>
-                <th className="px-4 py-2 text-right font-thin">تاریخ انقضا</th>
+                <th className="px-6 py-3 font-light whitespace-nowrap">
+                  نام محصول
+                </th>
+                <th className="px-6 py-3 font-light whitespace-nowrap">قیمت</th>
+                <th className="px-6 py-3 font-light whitespace-nowrap">
+                  تعداد موجود
+                </th>
+                <th className="px-6 py-3 font-light whitespace-nowrap">
+                  تاریخ انقضا
+                </th>
               </tr>
             </thead>
             <tbody>
               {expiringProducts.map((p) => (
-                <tr key={p.product_id} className="border-b font-thin">
-                  <td className="px-4 py-5 text-right">{p.name}</td>
-                  <td className="px-4 py-5 text-green-600 text-right">
-                    {p.price_per_unit} تومان
+                <tr
+                  key={p.product_id}
+                  className={`border-b transition-colors cursor-pointer ${expiringRowEvenBg}`}
+                >
+                  <td className="px-6 py-4 font-medium">{p.name}</td>
+                  <td className="px-6 py-4 text-green-500 font-semibold">
+                    {p.price_per_unit.toLocaleString()} تومان
                   </td>
-                  <td className="px-4 py-5 text-right">
-                    {p.available_quantity}
+                  <td className="px-6 py-4">
+                    {p.available_quantity.toLocaleString()}
                   </td>
-                  <td className="px-4 py-5 text-right">{p.expiration_date}</td>
+                  <td className="px-6 py-4">{p.expiration_date}</td>
                 </tr>
               ))}
             </tbody>
@@ -232,6 +305,7 @@ function Expired() {
     </div>
   );
 }
+
 Expired.showSidebar = true;
 Expired.isAdmin = true;
 

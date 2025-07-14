@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Chart from "@/components/template/chart";
 import { useTheme } from "next-themes";
+import * as XLSX from "xlsx";
+
 
 const ApexCharts = dynamic(() => import("react-apexcharts"), { ssr: false });
 
@@ -17,21 +19,27 @@ function TotalSale() {
     pieData: null,
   });
 
+  const handleExportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(dailySalesData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "گزارش فروش");
+    XLSX.writeFile(workbook, "daily-sales-report.xlsx");
+  };
   useEffect(() => {
     setMounted(true);
-     const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("access_token");
 
-        if (!token) {
-          router.push("/");
-          return
-        }
+    if (!token) {
+      router.push("/");
+      return;
+    }
 
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
 
     // 1. Fetch Daily Sales
-    fetch("http://localhost:5000/stats/sales_by_date",{headers})
+    fetch("http://localhost:5000/stats/sales_by_date", { headers })
       .then((res) => res.json())
       .then((data) => {
         const formattedData = data.map((item) => ({
@@ -61,7 +69,7 @@ function TotalSale() {
       });
 
     // 2. Fetch Sales by Payment Method
-    fetch("http://localhost:5000/stats/sales_by_payment_method",{headers})
+    fetch("http://localhost:5000/stats/sales_by_payment_method", { headers })
       .then((res) => res.json())
       .then((data) => {
         const formattedData = data.map((item) => ({
@@ -108,7 +116,7 @@ function TotalSale() {
       });
 
     // 3. Fetch Top Products
-    fetch("http://localhost:5000/stats/top_products",{headers})
+    fetch("http://localhost:5000/stats/top_products", { headers })
       .then((res) => res.json())
       .then((data) => {
         setBestProducts(data.map((item) => item[0] || "نامشخص"));
@@ -145,18 +153,62 @@ function TotalSale() {
   if (!mounted) return null;
 
   return (
-    <div className="p-4">
-      <div className="flex justify-center">
-        <table className="table-auto border-collapse border border-gray-500 my-10 w-[90%]">
-          <thead className="bg-slate-600 text-white">
+    <div className="p-6 space-y-10">
+      {/* هدر و دکمه‌های ابزار */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <h2 className="text-xl font-semibold">گزارش فروش روزانه</h2>
+
+        <div className="flex flex-wrap gap-2">         
+
+          {/* خروجی اکسل */}
+          <button
+            onClick={handleExportToExcel}
+            className="px-4 py-2 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition"
+          >
+            خروجی Excel
+          </button>
+
+          {/* چاپ گزارش */}
+          <button
+            onClick={() => window.print()}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700 transition"
+          >
+            چاپ گزارش
+          </button>
+        </div>
+      </div>
+
+      {/* جدول فروش */}
+      <div className="overflow-x-auto">
+        <table
+          className={`w-full text-sm rounded-xl overflow-hidden shadow-md border ${
+            currentTheme === "dark"
+              ? "bg-gray-800 text-gray-100 border-gray-700"
+              : "bg-white text-gray-800 border-gray-300"
+          }`}
+        >
+          <thead
+            className={`text-xs font-semibold uppercase tracking-wide ${
+              currentTheme === "dark" ? "bg-gray-700" : "bg-gray-200"
+            }`}
+          >
             <tr>
-              <th className="px-4 py-5">تاریخ</th>
-              <th className="px-4 py-5">فروش روزانه</th>
-              <th className="px-4 py-5">تعداد تراکنش‌ها</th>
-              <th className="px-4 py-5">میانگین ارزش تراکنش</th>
-              <th className="px-4 py-5">تخفیف کل</th>
-              <th className="px-4 py-5">پرفروش‌ترین محصول</th>
-              <th className="px-4 py-5">روش پرداخت</th>
+              {[
+                "تاریخ",
+                "فروش روزانه",
+                "تعداد تراکنش‌ها",
+                "میانگین ارزش تراکنش",
+                "تخفیف کل",
+                "پرفروش‌ترین محصول",
+                "روش پرداخت",
+              ].map((label) => (
+                <th
+                  key={label}
+                  className="px-6 py-4 whitespace-nowrap text-center"
+                >
+                  {label}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -170,22 +222,29 @@ function TotalSale() {
               ).toFixed(0);
 
               return (
-                <tr key={index} className={`${currentTheme === "dark" ? "odd:bg-gray-500 even:bg-gray-700" : "odd:bg-white even:bg-gray-200"} `}>
-                  <td className=" px-4 py-2">
+                <tr
+                  key={index}
+                  className={`text-center transition ${
+                    currentTheme === "dark"
+                      ? index % 2 === 0
+                        ? "bg-gray-700/50"
+                        : "bg-gray-800"
+                      : index % 2 === 0
+                      ? "bg-white"
+                      : "bg-gray-50"
+                  } hover:bg-blue-100/20`}
+                >
+                  <td className="px-4 py-3">
                     {new Date(item.date).toLocaleDateString("fa-IR")}
                   </td>
-                  <td className=" px-4 py-2">
+                  <td className="px-4 py-3 font-semibold text-green-600">
                     {item.daily_sales.toLocaleString()}
                   </td>
-                  <td className=" px-4 py-2">{runningTransactions}</td>
-                  <td className=" px-4 py-2">
-                    {runningAvg.toLocaleString()}
-                  </td>
-                  <td className=" px-4 py-2">0</td>
-                  <td className=" px-4 py-2">
-                    {getRandom(bestProducts)}
-                  </td>
-                  <td className=" px-4 py-2">
+                  <td className="px-4 py-3">{runningTransactions}</td>
+                  <td className="px-4 py-3">{runningAvg.toLocaleString()}</td>
+                  <td className="px-4 py-3 text-red-500">۰</td>
+                  <td className="px-4 py-3">{getRandom(bestProducts)}</td>
+                  <td className="px-4 py-3">
                     {getRandom(
                       paymentMethodSales.map(
                         (p) => `روش ${p.payment_method_id}`
@@ -199,9 +258,16 @@ function TotalSale() {
         </table>
       </div>
 
-      <div className="flex gap-5 mr-10">
+      {/* نمودارها */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:hidden">
         {chartData?.dailyData && (
-          <div className={` w-full flex flex-col items-center rounded ${currentTheme === "dark"? "bg-gray-800": "bg-white shadow"}`}>
+          <div
+            className={`w-full p-6 rounded-xl shadow-lg ${
+              currentTheme === "dark"
+                ? "bg-gray-800 text-gray-100"
+                : "bg-white text-gray-800"
+            }`}
+          >
             <Chart
               title={chartData.dailyData.title}
               categories={chartData.dailyData.categories}
@@ -212,10 +278,16 @@ function TotalSale() {
         )}
 
         {chartData?.pieData && chartData.pieData.series.length > 0 && (
-          <div className={` w-full flex flex-col items-center rounded ${currentTheme === "dark"? "bg-gray-800": "bg-white shadow"}`}>
+          <div
+            className={`w-full p-6 rounded-xl shadow-lg flex flex-col items-center ${
+              currentTheme === "dark"
+                ? "bg-gray-800 text-gray-100"
+                : "bg-white text-gray-800"
+            }`}
+          >
             <button
               onClick={toggleLegend}
-              className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-md"
+              className="mb-6 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition text-white text-sm"
             >
               {chartData.pieData.options.legend.show
                 ? "پنهان کردن توضیحات"
@@ -226,7 +298,7 @@ function TotalSale() {
               series={chartData.pieData.series}
               type="pie"
               height={350}
-              width={500}
+              width="100%"
             />
           </div>
         )}

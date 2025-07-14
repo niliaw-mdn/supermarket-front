@@ -140,18 +140,18 @@ export default function AddItem() {
     try {
       const token = localStorage.getItem("access_token");
 
-        if (!token) {
-          router.push("/");
-          return
-        }
+      if (!token) {
+        router.push("/");
+        return;
+      }
 
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
       const res = await fetch("http://localhost:5000/insertProduct", {
         method: "POST",
         body: formDataToSend,
-        headers
+        headers,
       });
 
       const data = await res.json();
@@ -191,60 +191,63 @@ export default function AddItem() {
   if (!mounted) return null;
 
   return (
-    <div className={`max-w-4xl mx-auto m-5 p-8 shadow-lg rounded-lg ${currentTheme === "dark" ? "bg-gray-600" : "bg-gray-100"}`}>
+    <div
+      className={`max-w-4xl mx-auto m-5 p-8 shadow-lg rounded-lg ${
+        currentTheme === "dark" ? "bg-gray-600" : "bg-gray-100"
+      }`}
+    >
       <h1 className="text-2xl font-semibold mb-6">مشخصات محصول</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {Object.keys(formData).map((key) => {
           if (key === "file") {
             return (
-              <div key={key} className="flex flex-col">
-                <label className="mb-2 text-sm font-medium">عکس محصول</label>
-                <div className="flex items-center justify-center w-full">
-                  <label
-                    htmlFor="dropzone-file"
-                    className={`flex flex-col items-center justify-center w-full h-64 border-2  border-dashed rounded-lg cursor-pointer ${currentTheme === "dark" ? "bg-gray-700 hover:bg-gray-900 border-gray-500" : "bg-gray-50 hover:bg-gray-200 border-gray-300 "}`}
-                  >
-                    {formData.file ? (
-                      <img
-                        src={URL.createObjectURL(formData.file)}
-                        alt="Uploaded Preview"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg
-                          className="w-8 h-8 mb-4 text-gray-500"
-                          fill="none"
-                          viewBox="0 0 20 16"
-                        >
-                          <path
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                          />
-                        </svg>
-                        <p className="mb-2 text-sm text-gray-500">
-                          <span className="font-semibold">Click to upload</span>{" "}
-                          or drag and drop
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          SVG, PNG, JPG or GIF (MAX. 800x400px)
-                        </p>
-                      </div>
-                    )}
-                    <input
-                      id="dropzone-file"
-                      type="file"
-                      name={key}
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFileChange}
-                      required
+              <div key={key} className="space-y-2">
+                <label className="text-sm font-medium">عکس محصول</label>
+                <label
+                  htmlFor="dropzone-file"
+                  className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-xl cursor-pointer transition ${
+                    currentTheme === "dark"
+                      ? "bg-gray-800 hover:bg-gray-900 border-gray-600"
+                      : "bg-gray-50 hover:bg-gray-100 border-gray-300"
+                  }`}
+                >
+                  {formData.file ? (
+                    <img
+                      src={URL.createObjectURL(formData.file)}
+                      alt="Uploaded Preview"
+                      className="w-full h-full object-cover rounded-xl"
                     />
-                  </label>
-                </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-6 text-center text-gray-500">
+                      <svg
+                        className="w-10 h-10 mb-3"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M3 15a4 4 0 004 4h10a4 4 0 004-4m-4-4V5a2 2 0 00-2-2H9a2 2 0 00-2 2v6m4-4l-4 4m0 0l4 4m-4-4h12"
+                        />
+                      </svg>
+                      <p className="text-sm font-semibold">
+                        برای بارگذاری کلیک کنید
+                      </p>
+                      <p className="text-xs">PNG, JPG, GIF تا ابعاد 800×400</p>
+                    </div>
+                  )}
+                  <input
+                    id="dropzone-file"
+                    type="file"
+                    name={key}
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    required
+                  />
+                </label>
               </div>
             );
           }
@@ -262,7 +265,9 @@ export default function AddItem() {
                   name={key}
                   value={formData[key]}
                   onChange={handleChange}
-                  className={` outline-none ${currentTheme === "dark" ? "bg-gray-800/50" : "bg-white"} px-4 py-2 rounded-md`}
+                  className={` outline-none ${
+                    currentTheme === "dark" ? "bg-gray-800/50" : "bg-white"
+                  } px-4 py-2 rounded-md`}
                   required
                 >
                   {categories.map((category) => (
@@ -277,7 +282,7 @@ export default function AddItem() {
               </div>
             );
           }
-          
+
           if (key === "uom_id") {
             if (!formData[key] && uoms.length > 0) {
               formData[key] = uoms[0].uom_id;
@@ -291,7 +296,9 @@ export default function AddItem() {
                   name={key}
                   value={formData[key]}
                   onChange={handleChange}
-                  className={` outline-none ${currentTheme === "dark" ? "bg-gray-800/50" : "bg-white"} px-4 py-2 rounded-md`}
+                  className={` outline-none ${
+                    currentTheme === "dark" ? "bg-gray-800/50" : "bg-white"
+                  } px-4 py-2 rounded-md`}
                   required
                 >
                   {uoms.map((uom) => (
@@ -302,7 +309,7 @@ export default function AddItem() {
                 </select>
               </div>
             );
-          }          
+          }
 
           return (
             <div key={key} className="flex flex-col">
@@ -321,7 +328,9 @@ export default function AddItem() {
                 name={key}
                 value={formData[key]}
                 onChange={handleChange}
-                className={` outline-none ${currentTheme === "dark" ? "bg-gray-800/50" : "bg-white"} px-4 py-2 rounded-md`}
+                className={` outline-none ${
+                  currentTheme === "dark" ? "bg-gray-800/50" : "bg-white"
+                } px-4 py-2 rounded-md`}
                 required
               />
             </div>
@@ -330,10 +339,10 @@ export default function AddItem() {
 
         <button
           type="submit"
-          className="w-full py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex justify-center items-center"
+          className="w-full mt-6 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
           disabled={isLoading}
         >
-          {isLoading ? "Submitting..." : "Insert Product"}
+          {isLoading ? "در حال ارسال..." : "افزودن محصول"}
         </button>
       </form>
     </div>
