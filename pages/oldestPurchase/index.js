@@ -55,16 +55,13 @@ export default function OldestPurchaseTable() {
     if (!order?.purchase_data) return;
 
     try {
-      const items = order?.purchase_data
-        ? Object.entries(order.purchase_data).map(
-            ([product_name, quantity]) => ({
-              product_name,
-              quantity,
-            })
-          )
-        : [];
-
-      const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+      // Convert the purchase_data to the format the API expects
+      const payload = {};
+      for (const [product_name, quantity] of Object.entries(
+        order.purchase_data
+      )) {
+        payload[product_name] = quantity;
+      }
 
       const response = await fetch(
         "http://localhost:5001/updateStockAfterOrder",
@@ -73,7 +70,7 @@ export default function OldestPurchaseTable() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ order_details: items }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -209,20 +206,12 @@ export default function OldestPurchaseTable() {
             )}
             {/* دکمه جدید برای به‌روزرسانی موجودی */}
             {order && (
-              <>
-                <button
-                  onClick={updateStock}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  به‌روزرسانی موجودی
-                </button>
-                <button
-                  onClick={sendToInsertOrder}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  ثبت نهایی سفارش
-                </button>
-              </>
+              <button
+                onClick={updateStock}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                به‌روزرسانی موجودی
+              </button>
             )}
           </div>
           <button
