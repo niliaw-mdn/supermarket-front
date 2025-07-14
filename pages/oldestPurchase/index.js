@@ -206,20 +206,22 @@ export default function OldestPurchaseTable() {
             )}
             {/* دکمه جدید برای به‌روزرسانی موجودی */}
             {order && (
-              <button
-                onClick={updateStock}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                به‌روزرسانی موجودی
-              </button>
+              <>
+                <button
+                  onClick={updateStock}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  به‌روزرسانی موجودی
+                </button>
+                <button
+                  onClick={sendToInsertOrder}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  ثبت نهایی سفارش
+                </button>
+              </>
             )}
           </div>
-          <button
-            onClick={fetchData}
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
-          >
-            بروزرسانی سفارش‌ها
-          </button>
         </div>
 
         {/* کارت‌های اطلاعات */}
