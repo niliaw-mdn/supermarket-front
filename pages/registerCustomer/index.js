@@ -41,7 +41,6 @@ function Index() {
       toast.success("با موفقیت ثبت شد");
       router.push("/productCustomer");
       localStorage.setItem("phone", phone);
-      localStorage.setItem("name", name);
     } else {
       const errorData = await response.json();
       toast.error(errorData.error || "خطا در ثبت اطلاعات");

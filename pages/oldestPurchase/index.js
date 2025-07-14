@@ -6,10 +6,12 @@ import { useTheme } from "next-themes";
 
 export default function OldestPurchaseTable() {
   const [order, setOrder] = useState(null);
-  const [flag, setFlag] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [flag, setFlag] = useState(false); // Initialize as boolean false instead of null  const [loading, setLoading] = useState(true);
   const { resolvedTheme } = useTheme();
+  const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const phone = localStorage.getItem("phone");
+  const name = localStorage.getItem("name");
 
   useEffect(() => {
     setMounted(true);
@@ -20,28 +22,130 @@ export default function OldestPurchaseTable() {
 
   const fetchData = async () => {
     try {
-      const [purchaseRes, flagRes] = await Promise.all([
-        fetch("http://localhost:5001/oldestPurchase"),
-        fetch("http://localhost:5001/getPurchaseFlag"),
-      ]);
+      setLoading(true);
 
-      if (!purchaseRes.ok || !flagRes.ok) {
-        toast.error("خطا در دریافت اطلاعات");
-        setLoading(false);
+      // First check the flag
+      const flagRes = await fetch("http://localhost:5001/getPurchaseFlag");
+      if (!flagRes.ok) {
+        throw new Error("خطا در دریافت وضعیت سفارش");
+      }
+
+      const flagData = await flagRes.json();
+      setFlag(flagData["Purchase Flag"]);
+
+      // Only proceed if flag is true
+      if (!flagData["Purchase Flag"]) {
+        setOrder(null);
         return;
       }
 
-      const purchaseData = await purchaseRes.json();
-      const flagData = await flagRes.json();
+      // Fetch purchase data
+      const purchaseRes = await fetch("http://localhost:5001/oldestPurchase");
+      if (!purchaseRes.ok) {
+        throw new Error("خطا در دریافت اطلاعات سفارش");
+      }
 
-      setOrder(purchaseData);
-      setFlag(flagData["Purchase Flag"]);
-      setLoading(false);
+      setOrder(await purchaseRes.json());
     } catch (error) {
-      toast.error("مشکل در اتصال به سرور");
+      toast.error(error.message);
+    } finally {
       setLoading(false);
     }
   };
+
+  const updateStock = async () => {
+    if (!order?.purchase_data) return;
+
+    try {
+      const items = order?.purchase_data
+        ? Object.entries(order.purchase_data).map(
+            ([product_name, quantity]) => ({
+              product_name,
+              quantity,
+            })
+          )
+        : [];
+
+      const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+
+      const response = await fetch(
+        "http://localhost:5001/updateStockAfterOrder",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ order_details: items }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "خطا در به‌روزرسانی موجودی");
+      }
+
+      toast.success("موجودی محصولات با موفقیت به روز شد");
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+  const sendToInsertOrder = async () => {
+    if (!order?.purchase_data) {
+      toast.error("اطلاعات سفارش موجود نیست");
+      return;
+    }
+
+    try {
+      const payload = {
+        customer_name: name || "مشتری ناشناس",
+        customer_phone: phone || "00000000000",
+        payment_method_id: 2,
+        products: order.purchase_data,
+      };
+
+      const response = await fetch("http://localhost:5001/insertOrder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "خطا در ثبت سفارش");
+      }
+
+      toast.success(`سفارش با موفقیت ثبت شد. کد سفارش: ${data.order_id}`);
+      await updateCustomerAfterOrder();
+
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+  const updateCustomerAfterOrder = async () => {
+  try {
+    const response = await fetch("http://localhost:5001/updateCustomerAfterOrder", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ customer_phone: phone }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "خطا در به‌روزرسانی اطلاعات مشتری");
+    }
+
+    toast.success("اطلاعات مشتری با موفقیت به‌روز شد");
+  } catch (error) {
+    toast.error(error.message);
+  }
+};
+
 
   if (!mounted) return null;
 
@@ -74,7 +178,7 @@ export default function OldestPurchaseTable() {
 
   return (
     <div
-      className={`max-w-5xl mx-auto p-4 sm:p-6 ${bg} ${text} rounded-2xl shadow-lg`}
+      className={`max-w-5xl m-5 mx-auto p-4 sm:p-6 ${bg} ${text} rounded-2xl shadow-lg`}
     >
       <Toaster position="top-center" />
 
@@ -103,6 +207,15 @@ export default function OldestPurchaseTable() {
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                 {flag}
               </span>
+            )}
+            {/* دکمه جدید برای به‌روزرسانی موجودی */}
+            {order && (
+              <button
+                onClick={updateStock}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                به‌روزرسانی موجودی
+              </button>
             )}
           </div>
         </div>
@@ -264,14 +377,6 @@ export default function OldestPurchaseTable() {
                       >
                         تعداد
                       </th>
-                      <th
-                        scope="col"
-                        className={`px-6 py-3 text-right text-xs font-medium uppercase tracking-wider ${
-                          isDark ? "text-gray-300" : "text-gray-500"
-                        }`}
-                      >
-                        وضعیت
-                      </th>
                     </tr>
                   </thead>
                   <tbody
@@ -315,15 +420,6 @@ export default function OldestPurchaseTable() {
                               <div className="text-sm font-medium">
                                 {formatProductName(item.product_name)}
                               </div>
-                              <div
-                                className={`text-sm ${
-                                  isDark ? "text-gray-400" : "text-gray-500"
-                                }`}
-                              >
-                                {item.product_name
-                                  .toLowerCase()
-                                  .replace(/-/g, " ")}
-                              </div>
                             </div>
                           </div>
                         </td>
@@ -340,21 +436,6 @@ export default function OldestPurchaseTable() {
                             }`}
                           >
                             {item.quantity.toLocaleString()} عدد
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              item.quantity > 5
-                                ? isDark
-                                  ? "bg-green-900/50 text-green-300"
-                                  : "bg-green-100 text-green-800"
-                                : isDark
-                                ? "bg-yellow-900/50 text-yellow-300"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
-                          >
-                            {item.quantity > 5 ? "موجود" : "کمبود"}
                           </span>
                         </td>
                       </tr>

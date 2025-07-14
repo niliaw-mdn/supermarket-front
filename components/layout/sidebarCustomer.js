@@ -39,7 +39,6 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { TbShoppingCartCheck } from "react-icons/tb";
 import { LuFolderCog } from "react-icons/lu";
 
-
 export default function SidebarCustomer({ isOpen, setIsOpen }) {
   const [openUser, setOpenUser] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -134,14 +133,15 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
             : `/customer_image/${data.image_address.split("/").pop()}`;
         }
 
+        const name = data.customer_name || "مشتری";
         setCustomer({
-          customer_name: data.customer_name || "مشتری",
+          customer_name: name,
           customer_phone: data.customer_phone,
           image_address: imagePath,
         });
+        localStorage.setItem("name", name);
       } catch (err) {
         setCustomer({
-          customer_name: "میهمان",
           image_address: "/pic/avatar.png",
         });
       }
@@ -512,7 +512,6 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
                         `}
                       >
                         <LuFolderCog
-
                           className="shrink-0 text-gray-500 group-hover:text-blue-700"
                           size={22}
                         />
