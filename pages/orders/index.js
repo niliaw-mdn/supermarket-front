@@ -61,6 +61,7 @@ export default function CustomerOrders() {
 
   const fetchOrders = async () => {
     try {
+      setLoading(true);
       const res = await fetch("http://localhost:5001/get_customer_orders", {
         method: "POST",
         headers: {
@@ -71,13 +72,16 @@ export default function CustomerOrders() {
 
       if (res.ok) {
         const data = await res.json();
-        setOrders(data);
+        // Ensure data is always an array
+        setOrders(Array.isArray(data) ? data : []);
       } else {
         const error = await res.json();
         toast.error(error.error || "خطا در دریافت سفارش‌ها");
+        setOrders([]); // Reset to empty array on error
       }
     } catch (error) {
       toast.error("خطا در اتصال به سرور");
+      setOrders([]); // Reset to empty array on error
     } finally {
       setLoading(false);
     }
@@ -147,35 +151,43 @@ export default function CustomerOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {orders.map((order) => (
-                <tr
-                  key={order.order_id}
-                  className={`transition-colors hover:${
-                    resolvedTheme === "dark" ? "bg-gray-700/80" : "bg-gray-50"
-                  }`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap font-medium">
-                    {order.order_id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {order.customer_name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-green-600 dark:text-green-400 font-medium">
-                    {order.total.toLocaleString()} تومان
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {order.date_time}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <button
-                      onClick={() => fetchOrderDetails(order.order_id)}
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-                    >
-                      جزئیات
-                    </button>
+              {Array.isArray(orders) && orders.length > 0 ? (
+                orders.map((order) => (
+                  <tr
+                    key={order.order_id}
+                    className={`transition-colors hover:${
+                      resolvedTheme === "dark" ? "bg-gray-700/80" : "bg-gray-50"
+                    }`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap font-medium">
+                      {order.order_id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {order.customer_name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-green-600 dark:text-green-400 font-medium">
+                      {order.total.toLocaleString()} تومان
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {order.date_time}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => fetchOrderDetails(order.order_id)}
+                        className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      >
+                        جزئیات
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="px-6 py-4 text-center">
+                    {loading ? "در حال بارگذاری..." : "سفارشی یافت نشد"}
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
