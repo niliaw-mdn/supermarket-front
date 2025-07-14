@@ -17,16 +17,17 @@ export default function CustomerOrders() {
   const fetchOrderDetails = async (orderId) => {
     try {
       setSelectedOrderId(orderId);
-      setModalLoading(true); // Use modalLoading instead of loading
-      setLoading(true);
+      setModalLoading(true);
 
-      const res = await fetch("http://localhost:5001/get_order_details", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ order_id: orderId }),
-      });
+      const res = await fetch(
+        `http://localhost:5001/get_order_details/${orderId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!res.ok) {
         const error = await res.json().catch(() => ({}));
@@ -41,9 +42,9 @@ export default function CustomerOrders() {
     } catch (error) {
       console.error("Fetch order details failed:", error);
       toast.error(error.message || "خطا در دریافت جزئیات سفارش");
-      setIsModalOpen(false); // Close modal on error
+      setIsModalOpen(false);
     } finally {
-      setLoading(false);
+      setModalLoading(false);
     }
   };
 
