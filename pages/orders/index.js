@@ -28,6 +28,7 @@ export default function CustomerOrders() {
     try {
       setSelectedOrderId(orderId);
       setModalLoading(true);
+      setIsModalOpen(true);
 
       const res = await fetch("http://localhost:5001/get_order_details", {
         method: "POST",
@@ -210,6 +211,7 @@ export default function CustomerOrders() {
       </div>
 
       {/* Order Details Modal */}
+      {/* Order Details Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div
@@ -217,7 +219,7 @@ export default function CustomerOrders() {
               resolvedTheme === "dark" ? "bg-gray-800" : "bg-white"
             }`}
           >
-            {loading ? (
+            {modalLoading ? (
               <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
               </div>
@@ -264,50 +266,70 @@ export default function CustomerOrders() {
                     resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-100"
                   }`}
                 >
-                  <table className="min-w-full">
-                    <thead
-                      className={
-                        resolvedTheme === "dark" ? "bg-gray-600" : "bg-gray-200"
-                      }
-                    >
-                      <tr>
-                        <th className="px-4 py-3 text-right font-medium">
-                          کد محصول
-                        </th>
-                        <th className="px-4 py-3 text-right font-medium">
-                          نام
-                        </th>
-                        <th className="px-4 py-3 text-right font-medium">
-                          دسته‌بندی
-                        </th>
-                        <th className="px-4 py-3 text-right font-medium">
-                          تعداد
-                        </th>
-                        <th className="px-4 py-3 text-right font-medium">
-                          قیمت واحد
-                        </th>
-                        <th className="px-4 py-3 text-right font-medium">
-                          قیمت کل
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                      {orderDetails.map((item, idx) => (
-                        <tr key={idx}>
-                          <td className="px-4 py-3">{item.product_id}</td>
-                          <td className="px-4 py-3 font-medium">{item.name}</td>
-                          <td className="px-4 py-3">{item.category_name}</td>
-                          <td className="px-4 py-3">{item.quantity}</td>
-                          <td className="px-4 py-3 text-green-600 dark:text-green-400">
-                            {item.ppu.toLocaleString()} تومان
-                          </td>
-                          <td className="px-4 py-3 font-medium text-green-600 dark:text-green-400">
-                            {item.total_price.toLocaleString()} تومان
-                          </td>
+                  {orderDetails.length > 0 ? (
+                    <table className="min-w-full">
+                      <thead
+                        className={
+                          resolvedTheme === "dark"
+                            ? "bg-gray-600"
+                            : "bg-gray-200"
+                        }
+                      >
+                        <tr>
+                          <th className="px-4 py-3 text-right font-medium">
+                            کد محصول
+                          </th>
+                          <th className="px-4 py-3 text-right font-medium">
+                            نام
+                          </th>
+                          <th className="px-4 py-3 text-right font-medium">
+                            دسته‌بندی
+                          </th>
+                          <th className="px-4 py-3 text-right font-medium">
+                            تعداد
+                          </th>
+                          <th className="px-4 py-3 text-right font-medium">
+                            قیمت واحد
+                          </th>
+                          <th className="px-4 py-3 text-right font-medium">
+                            قیمت کل
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {orderDetails.map((item, idx) => (
+                          <tr key={idx}>
+                            <td className="px-4 py-3">
+                              {item.product_id || "--"}
+                            </td>
+                            <td className="px-4 py-3 font-medium">
+                              {item.product_name || "--"}
+                            </td>
+                            <td className="px-4 py-3">
+                              {item.category_name || "--"}
+                            </td>
+                            <td className="px-4 py-3">
+                              {item.quantity || "--"}
+                            </td>
+                            <td className="px-4 py-3 text-green-600 dark:text-green-400">
+                              {item.ppu
+                                ? item.ppu.toLocaleString() + " تومان"
+                                : "--"}
+                            </td>
+                            <td className="px-4 py-3 font-medium text-green-600 dark:text-green-400">
+                              {item.total_price
+                                ? item.total_price.toLocaleString() + " تومان"
+                                : "--"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                      هیچ جزئیاتی برای این سفارش یافت نشد
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 flex justify-end">
