@@ -194,6 +194,20 @@ export default function OldestPurchaseTable() {
           </div>
 
           <div className="flex items-center space-x-3">
+            {loading && order && (
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 flex items-center`}
+              >
+                <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
+                در حال بروزرسانی...
+              </span>
+            )}
+            {flag && (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                {flag}
+              </span>
+            )}
+            {/* دکمه جدید برای به‌روزرسانی موجودی */}
             {order && (
               <>
                 <button
@@ -209,20 +223,6 @@ export default function OldestPurchaseTable() {
                   ثبت نهایی سفارش
                 </button>
               </>
-            )}
-            {flag && (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                {flag}
-              </span>
-            )}
-            {/* دکمه جدید برای به‌روزرسانی موجودی */}
-            {order && (
-              <button
-                onClick={updateStock}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                به‌روزرسانی موجودی
-              </button>
             )}
           </div>
           <button
