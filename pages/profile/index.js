@@ -47,15 +47,23 @@ function Profile() {
 
         const result = await response.json();
 
+        console.log("Received birthday:", result.birthday); // برای تست
+
         if (response.ok) {
           setUserData({
             email: result.email || email,
             first_name: result.first_name || "",
             last_name: result.last_name || "",
-            birthday: result.birthday ? result.birthday.split("T")[0] : "",
-            membership_date: result.membership_date
-              ? result.membership_date.split("T")[0]
-              : "",
+            birthday:
+              result.birthday && typeof result.birthday === "string"
+                ? new Date(result.birthday).toISOString().split("T")[0]
+                : "",
+            membership_date:
+              result.membership_date &&
+              typeof result.membership_date === "string" &&
+              result.membership_date.includes("T")
+                ? result.membership_date.split("T")[0]
+                : result.membership_date || "",
             work_experience: result.work_experience || "",
             country: result.country || "",
             skills: result.skills || "",
@@ -69,6 +77,7 @@ function Profile() {
         }
       } catch (error) {
         console.error("Request failed:", error);
+        toast.error("خطا در دریافت اطلاعات کاربر", { id: loadingToast });
       }
     };
 
@@ -363,9 +372,7 @@ function Profile() {
             }`}
           >
             <div className="p-6">
-              <h3 className="text-lg font-bold mb-4">
-                مهارت‌ها
-              </h3>
+              <h3 className="text-lg font-bold mb-4">مهارت‌ها</h3>
               <div className="flex flex-wrap gap-3">
                 {userData.skills ? (
                   userData.skills.split(",").map((skill, index) => (

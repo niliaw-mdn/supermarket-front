@@ -169,15 +169,16 @@ function Allproduct() {
     if (!window.confirm("آیا مطمئنید میخواهید این محصول را حذف کنید؟")) return;
     setLoading(true);
     try {
-      await axios.post("http://localhost:5000/deleteProduct", {
-        product_id: productId,
-        headers,
-      });
-      toast.success("محصول با موفقیت حدف شد!");
+      await axios.post(
+        "http://localhost:5000/deleteProduct",
+        { product_id: productId },
+        { headers } 
+      );
+      toast.success("محصول با موفقیت حذف شد!");
       setProducts((prev) => prev.filter((p) => p.product_id !== productId));
     } catch (error) {
       console.error("Error deleting product:", error);
-      toast.error("Failed to delete product.");
+      toast.error("حذف محصول با خطا مواجه شد.");
     } finally {
       setLoading(false);
     }

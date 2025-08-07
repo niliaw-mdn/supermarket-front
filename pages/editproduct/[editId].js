@@ -118,9 +118,11 @@ function EditProduct({ editId, onClose }) {
       const response = await axios.put(
         `http://localhost:5000/updateProduct/${editId}`,
         formData,
-        header,
         {
-          headers: { "Content-Type": "multipart/form-data" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
 

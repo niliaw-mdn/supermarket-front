@@ -3,16 +3,21 @@
 import { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useTheme } from "next-themes";
+import Modal from "@/components/template/modal";
 
 export default function CustomerOrders() {
   const [orders, setOrders] = useState([]);
   const { resolvedTheme } = useTheme();
   const [orderDetails, setOrderDetails] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false); // Added missing state
+  const [modalLoading, setModalLoading] = useState(false); 
   const [loading, setLoading] = useState(true);
   const [customerPhone, setCustomerPhone] = useState(null);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+
+  const closeModal = () => {
+    setIsModalOpen(false); 
+  };
 
   const fetchOrderDetails = async (orderId) => {
     try {
@@ -73,16 +78,16 @@ export default function CustomerOrders() {
 
       if (res.ok) {
         const data = await res.json();
-        // Ensure data is always an array
+
         setOrders(Array.isArray(data) ? data : []);
       } else {
         const error = await res.json();
         toast.error(error.error || "خطا در دریافت سفارش‌ها");
-        setOrders([]); // Reset to empty array on error
+        setOrders([]); 
       }
     } catch (error) {
       toast.error("خطا در اتصال به سرور");
-      setOrders([]); // Reset to empty array on error
+      setOrders([]); 
     } finally {
       setLoading(false);
     }
@@ -194,140 +199,140 @@ export default function CustomerOrders() {
         </div>
       </div>
 
-      {/* Order Details Modal */}
-      {/* Order Details Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div
-            className={`rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto ${
-              resolvedTheme === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
-          >
-            {modalLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-              </div>
-            ) : (
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold">
-                      جزئیات سفارش #{selectedOrderId}
-                    </h2>
-                    <p
-                      className={`mt-1 ${
-                        resolvedTheme === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      مشاهده اقلام سفارش داده شده
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
+        <Modal onClose={closeModal}>
+          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
+            <div
+              className={`rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto ${
+                resolvedTheme === "dark" ? "bg-gray-800" : "bg-white"
+              }`}
+            >
+              {modalLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
-
-                <div
-                  className={`rounded-lg overflow-hidden ${
-                    resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-100"
-                  }`}
-                >
-                  {orderDetails.length > 0 ? (
-                    <table className="min-w-full">
-                      <thead
-                        className={
+              ) : (
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h2 className="text-xl font-bold">
+                        جزئیات سفارش #{selectedOrderId}
+                      </h2>
+                      <p
+                        className={`mt-1 ${
                           resolvedTheme === "dark"
-                            ? "bg-gray-600"
-                            : "bg-gray-200"
-                        }
+                            ? "text-gray-400"
+                            : "text-gray-600"
+                        }`}
                       >
-                        <tr>
-                          <th className="px-4 py-3 text-right font-medium">
-                            کد محصول
-                          </th>
-                          <th className="px-4 py-3 text-right font-medium">
-                            نام
-                          </th>
-                          <th className="px-4 py-3 text-right font-medium">
-                            دسته‌بندی
-                          </th>
-                          <th className="px-4 py-3 text-right font-medium">
-                            تعداد
-                          </th>
-                          <th className="px-4 py-3 text-right font-medium">
-                            قیمت واحد
-                          </th>
-                          <th className="px-4 py-3 text-right font-medium">
-                            قیمت کل
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {orderDetails.map((item, idx) => (
-                          <tr key={idx}>
-                            <td className="px-4 py-3">
-                              {item.product_id || "--"}
-                            </td>
-                            <td className="px-4 py-3 font-medium">
-                              {item.product_name || "--"}
-                            </td>
-                            <td className="px-4 py-3">
-                              {item.category_name || "--"}
-                            </td>
-                            <td className="px-4 py-3">
-                              {item.quantity || "--"}
-                            </td>
-                            <td className="px-4 py-3 text-green-600 dark:text-green-400">
-                              {item.ppu
-                                ? item.ppu.toLocaleString() + " تومان"
-                                : "--"}
-                            </td>
-                            <td className="px-4 py-3 font-medium text-green-600 dark:text-green-400">
-                              {item.total_price
-                                ? item.total_price.toLocaleString() + " تومان"
-                                : "--"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  ) : (
-                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                      هیچ جزئیاتی برای این سفارش یافت نشد
+                        مشاهده اقلام سفارش داده شده
+                      </p>
                     </div>
-                  )}
-                </div>
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
 
-                <div className="mt-6 flex justify-end">
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                  <div
+                    className={`rounded-lg overflow-hidden ${
+                      resolvedTheme === "dark" ? "bg-gray-700" : "bg-gray-100"
+                    }`}
                   >
-                    بستن
-                  </button>
+                    {orderDetails.length > 0 ? (
+                      <table className="min-w-full">
+                        <thead
+                          className={
+                            resolvedTheme === "dark"
+                              ? "bg-gray-600"
+                              : "bg-gray-200"
+                          }
+                        >
+                          <tr>
+                            <th className="px-4 py-3 text-right font-medium">
+                              کد محصول
+                            </th>
+                            <th className="px-4 py-3 text-right font-medium">
+                              نام
+                            </th>
+                            <th className="px-4 py-3 text-right font-medium">
+                              دسته‌بندی
+                            </th>
+                            <th className="px-4 py-3 text-right font-medium">
+                              تعداد
+                            </th>
+                            <th className="px-4 py-3 text-right font-medium">
+                              قیمت واحد
+                            </th>
+                            <th className="px-4 py-3 text-right font-medium">
+                              قیمت کل
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                          {orderDetails.map((item, idx) => (
+                            <tr key={idx}>
+                              <td className="px-4 py-3">
+                                {item.product_id || "--"}
+                              </td>
+                              <td className="px-4 py-3 font-medium">
+                                {item.product_name || "--"}
+                              </td>
+                              <td className="px-4 py-3">
+                                {item.category_name || "--"}
+                              </td>
+                              <td className="px-4 py-3">
+                                {item.quantity || "--"}
+                              </td>
+                              <td className="px-4 py-3 text-green-600 dark:text-green-400">
+                                {item.ppu
+                                  ? item.ppu.toLocaleString() + " تومان"
+                                  : "--"}
+                              </td>
+                              <td className="px-4 py-3 font-medium text-green-600 dark:text-green-400">
+                                {item.total_price
+                                  ? item.total_price.toLocaleString() + " تومان"
+                                  : "--"}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                        هیچ جزئیاتی برای این سفارش یافت نشد
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
+                    >
+                      بستن
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/router";
 import persian from "react-date-object/calendars/persian";
 import persian_fa from "react-date-object/locales/persian_fa";
+import toast from "react-hot-toast";
 
 const Calendar = dynamic(
   () => import("react-multi-date-picker").then((mod) => mod.Calendar),
@@ -54,12 +55,19 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
     authentication: false,
     support: false,
   });
+   const [userData, setUserData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    birthday: "",
+  });
   const { systemTheme, theme, setTheme } = useTheme();
   const currentTheme = theme === "system" ? "light" : theme;
 
   const [mounted, setMounted] = useState(false);
 
   const [windowWidth, setWindowWidth] = useState(0);
+
 
   const toggleDropdownUser = () => setOpenUser((prev) => !prev);
   useEffect(() => {
@@ -92,6 +100,48 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
       setIsOpen(false);
     }
   }, [windowWidth]);
+   const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+  const email = typeof window !== "undefined" ? localStorage.getItem("email") : null;
+
+  const fetchUserInfo = async () => {
+    if (!token || !email) return; // اگر token یا email نبود، نرو جلو
+
+    const loadingToast = toast.loading("در حال دریافت اطلاعات کاربر...");
+    try {
+      const response = await fetch("http://localhost:5000/get_user_info", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setUserData({
+          email: result.email || email,
+          first_name: result.first_name || "",
+          last_name: result.last_name || "",
+          birthday:
+            result.birthday && typeof result.birthday === "string"
+              ? new Date(result.birthday).toISOString().split("T")[0]
+              : "",
+        });
+        toast.dismiss(loadingToast);
+      } else {
+        toast.error(result.error || "خطا در دریافت اطلاعات کاربر", { id: loadingToast });
+      }
+    } catch (error) {
+      console.error("Request failed:", error);
+      toast.error("خطا در دریافت اطلاعات کاربر", { id: loadingToast });
+    }
+  };
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, [token, email]);
 
   useEffect(() => {
     setDropStates((prevState) => ({
@@ -265,16 +315,16 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                         currentTheme === "dark" ? "text-white" : "text-black"
                       } `}
                     >
-                      نیلوفر معدنی
+         {userData.first_name} {userData.last_name}
                       <span className="mr-2 rounded bg-green-100 px-1.5 text-xs text-green-600">
-                        جونیور
+                        admin
                       </span>
                     </h4>
                     <a
                       href="#"
                       className="text-black/60 text-xs hover:text-blue-600"
                     >
-                      admin@test.com
+                      {userData.email}
                     </a>
                   </div>
                 </li>
@@ -292,31 +342,7 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                   </Link>
                 </li>
 
-                <li>
-                  <Link
-                    href="/setting"
-                    className="flex items-center gap-1 px-4 py-3 hover:text-blue-600 hover:bg-blue-300/10"
-                    onClick={() => setOpenUser(false)}
-                  >
-                    <span className="mr-2">
-                      <IoSettingsOutline size={20} />
-                    </span>
-                    <p> ویرایش حساب کاربری</p>
-                  </Link>
-                </li>
-
-                <li>
-                  <Link
-                    href="/apps-mailbox"
-                    className="flex items-center gap-1 px-4 py-3 hover:text-blue-600 hover:bg-blue-300/10"
-                    onClick={() => setOpenUser(false)}
-                  >
-                    <span className="mr-2">
-                      <HiOutlineInboxArrowDown size={20} />
-                    </span>
-                    <p> صندوق ورودی</p>
-                  </Link>
-                </li>
+                
               </ul>
             )}
           </div>
@@ -656,22 +682,6 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
                           }`}
                         >
                           - پروفایل
-                        </a>
-                      </li>
-                      <li className="group">
-                        <a
-                          href="/setting"
-                          className={`flex rounded-md p-2 pr-8 group-hover:text-blue-700 ${
-                            currentTheme === "dark"
-                              ? "group-hover:bg-[#2527396b]"
-                              : "group-hover:bg-blue-600/10"
-                          } ${
-                            router.pathname === "/setting"
-                              ? "text-blue-700"
-                              : ""
-                          }`}
-                        >
-                          - کارکرد شما
                         </a>
                       </li>
                     </ul>

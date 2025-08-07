@@ -4,7 +4,6 @@ import Chart from "@/components/template/chart";
 import { useTheme } from "next-themes";
 import * as XLSX from "xlsx";
 
-
 const ApexCharts = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 function TotalSale() {
@@ -18,6 +17,13 @@ function TotalSale() {
     dailyData: null,
     pieData: null,
   });
+  const paymentMethodMap = {
+    1: "پرداخت نقدی",
+    2: "کارت بانکی",
+    3: "درگاه اینترنتی",
+    4: "کیف پول دیجیتال",
+    5: "ارز دیجیتال",
+  };
 
   const handleExportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(dailySalesData);
@@ -73,14 +79,17 @@ function TotalSale() {
       .then((res) => res.json())
       .then((data) => {
         const formattedData = data.map((item) => ({
-          payment_method_id: item[0] || "نامشخص",
+          payment_method_id: item[0],
+          payment_method_name: paymentMethodMap[item[0]] || "نامشخص",
           total_sales: item[1],
         }));
         setPaymentMethodSales(formattedData);
 
         const series = formattedData.map((item) => item.total_sales);
         const labels = formattedData.map(
-          (item) => `روش ${item.payment_method_id}`
+          (item) =>
+            paymentMethodMap[item.payment_method_id] ||
+            `روش ${item.payment_method_id}`
         );
 
         setChartData((prev) => ({
@@ -158,8 +167,7 @@ function TotalSale() {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <h2 className="text-xl font-semibold">گزارش فروش روزانه</h2>
 
-        <div className="flex flex-wrap gap-2">         
-
+        <div className="flex flex-wrap gap-2">
           {/* خروجی اکسل */}
           <button
             onClick={handleExportToExcel}
@@ -246,9 +254,7 @@ function TotalSale() {
                   <td className="px-4 py-3">{getRandom(bestProducts)}</td>
                   <td className="px-4 py-3">
                     {getRandom(
-                      paymentMethodSales.map(
-                        (p) => `روش ${p.payment_method_id}`
-                      )
+                      paymentMethodSales.map((p) => p.payment_method_name)
                     )}
                   </td>
                 </tr>

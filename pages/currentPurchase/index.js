@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { useTheme } from "next-themes";
+import Modal from "@/components/template/modal";
 
-export default function OldestPurchaseTable() {
+export default function CurrentPurchaseTable() {
   const [order, setOrder] = useState(null);
   const [flag, setFlag] = useState(false); // Initialize as boolean false instead of null  const [loading, setLoading] = useState(true);
   const { resolvedTheme } = useTheme();
@@ -12,6 +13,19 @@ export default function OldestPurchaseTable() {
   const [mounted, setMounted] = useState(false);
   const phone = localStorage.getItem("phone");
   const name = localStorage.getItem("name");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [paymentMethods] = useState([
+    { id: 1, name: "پرداخت نقدی" },
+    { id: 2, name: "کارت بانکی" },
+    { id: 3, name: "درگاه اینترنتی" },
+    { id: 4, name: "کیف پول دیجیتال" },
+    { id: 5, name: "ارز دیجیتال" },
+  ]);
+
+  const closeModal = () => {
+    setShowPaymentModal(false);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -81,7 +95,7 @@ export default function OldestPurchaseTable() {
 
       toast.success("موجودی محصولات با موفقیت به روز شد");
     } catch (error) {
-      toast.error(error.message);
+      throw error;
     }
   };
   const sendToInsertOrder = async () => {
@@ -90,11 +104,23 @@ export default function OldestPurchaseTable() {
       return;
     }
 
+    setSelectedPaymentMethod(null);
+    setShowPaymentModal(true);
+  };
+
+  const confirmOrder = async () => {
+    if (!selectedPaymentMethod) {
+      toast.error("لطفاً روش پرداخت را انتخاب کنید");
+      return;
+    }
+
     try {
+      await updateStock();
+
       const payload = {
         customer_name: name || "مشتری ناشناس",
         customer_phone: phone || "00000000000",
-        payment_method_id: 2,
+        payment_method_id: selectedPaymentMethod,
         products: order.purchase_data,
       };
 
@@ -113,6 +139,7 @@ export default function OldestPurchaseTable() {
       }
 
       toast.success(`سفارش با موفقیت ثبت شد. کد سفارش: ${data.order_id}`);
+      setShowPaymentModal(false);
       await updateCustomerAfterOrder();
     } catch (error) {
       toast.error(error.message);
@@ -186,7 +213,7 @@ export default function OldestPurchaseTable() {
               سفارشات
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              نمایش قدیمی‌ترین سفارش سیستم
+            نمایش سفارش جاری شما
             </p>
           </div>
 
@@ -206,20 +233,12 @@ export default function OldestPurchaseTable() {
             )}
             {/* دکمه جدید برای به‌روزرسانی موجودی */}
             {order && (
-              <>
-                <button
-                  onClick={updateStock}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  به‌روزرسانی موجودی
-                </button>
-                <button
-                  onClick={sendToInsertOrder}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                  ثبت نهایی سفارش
-                </button>
-              </>
+              <button
+                onClick={sendToInsertOrder}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+              >
+                ثبت نهایی سفارش
+              </button>
             )}
           </div>
         </div>
@@ -474,9 +493,73 @@ export default function OldestPurchaseTable() {
           </div>
         )}
       </div>
+      {showPaymentModal && (
+        <Modal onClose={closeModal}>
+          <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
+            <div className={`rounded-xl shadow-2xl w-full max-w-md ${cardBg}`}>
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-bold">انتخاب روش پرداخت</h3>
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  {paymentMethods.map((method) => (
+                    <div
+                      key={method.id}
+                      className={`p-4 rounded-lg border cursor-pointer transition-colors ${
+                        selectedPaymentMethod === method.id
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30"
+                          : border
+                      }`}
+                      onClick={() => setSelectedPaymentMethod(method.id)}
+                    >
+                      <div className="flex items-center">
+                        <div
+                          className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${
+                            selectedPaymentMethod === method.id
+                              ? "border-blue-500 bg-blue-500"
+                              : border
+                          }`}
+                        >
+                          {selectedPaymentMethod === method.id && (
+                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                          )}
+                        </div>
+                        <span>{method.name}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setShowPaymentModal(false)}
+                    className="px-4 py-2 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    انصراف
+                  </button>
+                  <button
+                    onClick={confirmOrder}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
+                    disabled={!selectedPaymentMethod}
+                  >
+                    تایید و ثبت نهایی
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
 
-OldestPurchaseTable.showSidebar = true;
-OldestPurchaseTable.isAdmin = false;
+CurrentPurchaseTable.showSidebar = true;
+CurrentPurchaseTable.isAdmin = false;

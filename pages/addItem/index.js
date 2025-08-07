@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
+import axios from "axios";
 export default function AddItem() {
   const { systemTheme, theme, setTheme } = useTheme();
   const currentTheme = theme === "system" ? "light" : theme;
@@ -53,33 +54,29 @@ export default function AddItem() {
 
   useEffect(() => {
     setMounted(true);
-    const fetchCategories = async () => {
-      const categoryData = [
-        { category_id: 1, category_name: "Snacks" },
-        { category_id: 2, category_name: "Dairy" },
-        { category_id: 3, category_name: "Canned and Ready Meals" },
-        { category_id: 4, category_name: "Fruits and Vegetables" },
-        { category_id: 5, category_name: "Protein Ingredients" },
-        { category_id: 6, category_name: "Beverages" },
-      ];
-      setCategories(categoryData);
+
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
+
+        const [categoryRes, uomRes] = await Promise.all([
+          axios.get("http://localhost:5000/getcategory", { headers }),
+          axios.get("http://localhost:5000/getUOM", { headers }),
+        ]);
+
+        setCategories(categoryRes.data);
+        setUoms(uomRes.data);
+      } catch (error) {
+        console.error("خطا در دریافت دسته‌بندی یا واحد:", error);
+      }
     };
 
-    const fetchUOMs = async () => {
-      const uomData = [
-        { uom_id: 1, uom_name: "each" },
-        { uom_id: 2, uom_name: "kg" },
-        { uom_id: 3, uom_name: "g" },
-        { uom_id: 4, uom_name: "m" },
-        { uom_id: 5, uom_name: "m²" },
-        { uom_id: 6, uom_name: "m³" },
-        { uom_id: 7, uom_name: "litr" },
-      ];
-      setUoms(uomData);
-    };
-
-    fetchCategories();
-    fetchUOMs();
+    fetchData();
   }, []);
 
   const handleChange = (e) => {

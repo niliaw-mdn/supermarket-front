@@ -491,7 +491,7 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
                   </li>
                   <li>
                     <a
-                      href="/oldestPurchase"
+                      href="/currentPurchase"
                       onClick={toggleMenu}
                       className={`flex justify-center items-center group ${
                         currentTheme === "dark" ? "text-white" : "text-gray-800"
@@ -503,7 +503,7 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
                             ? "group-hover:bg-gray-800"
                             : "group-hover:bg-gray-200"
                         } ${
-                          router.pathname === "/oldestPurchase"
+                          router.pathname === "/currentPurchase"
                             ? currentTheme === "dark"
                               ? "bg-gray-800"
                               : "bg-gray-200"
@@ -516,7 +516,7 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
                           size={22}
                         />
                         <span className="ltr:pl-3 rtl:pr-3 text-[#506690]">
-                          قدیمی‌ترین سفارشات
+                        سفارش جاری
                         </span>
                       </div>
                     </a>
