@@ -36,6 +36,13 @@ export default function PopularProduct() {
           "http://localhost:5000/stats/peak_order_hour",
           { headers }
         );
+        let peakHourData = peakHourResponse.data;
+        if (Array.isArray(peakHourData)) {
+          peakHourData = {
+            hour: peakHourData[0],
+            order_count: peakHourData[1],
+          };
+        }
         const monthlyGrowthResponse = await axios.get(
           "http://localhost:5000/stats/monthly_sales_growth",
           { headers }
@@ -45,7 +52,7 @@ export default function PopularProduct() {
         setData({
           topProducts: topProductsResponse.data,
           popularCategories: popularCategoriesResponse.data,
-          peakHour: peakHourResponse.data,
+          peakHour: peakHourData,
           monthlyGrowth: monthlyGrowthResponse.data,
         });
       } catch (err) {
@@ -92,17 +99,17 @@ export default function PopularProduct() {
           <ul className="space-y-3">
             {topProducts.map((item, index) => (
               <li
-                key={item.product_id}
+                key={item[0]} // product_id
                 className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700"
               >
                 <span className="flex items-center">
                   <span className="text-gray-500 dark:text-gray-400 ml-2">
                     {index + 1}.
                   </span>
-                  {item.name}
+                  {item[1]} {/* name */}
                 </span>
                 <span className="font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm">
-                  {item.total_quantity} عدد
+                  {item[2]} عدد {/* total_quantity */}
                 </span>
               </li>
             ))}

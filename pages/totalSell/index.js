@@ -128,7 +128,11 @@ function TotalSale() {
     fetch("http://localhost:5000/stats/top_products", { headers })
       .then((res) => res.json())
       .then((data) => {
-        setBestProducts(data.map((item) => item[0] || "نامشخص"));
+        setBestProducts(
+          data.map((item) => {
+            return typeof item[1] === "string" ? item[1] : "نامشخص";
+          })
+        );
       });
   }, []);
 
