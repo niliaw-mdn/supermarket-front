@@ -43,6 +43,7 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
   const [openUser, setOpenUser] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+
   const dropdownRef = useRef(null);
   const router = useRouter();
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -100,6 +101,22 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
       alert(`Error: ${error.message}`);
     }
   };
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    if (searchValue.trim()) {
+      router.push({
+        pathname: router.pathname,
+        query: { search: searchValue },
+      });
+    } else {
+      router.push(router.pathname);
+    }
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, [searchValue, router]);
+
 
   useEffect(() => {
     const customerPhone = localStorage.getItem("phone");
@@ -516,7 +533,7 @@ export default function SidebarCustomer({ isOpen, setIsOpen }) {
                           size={22}
                         />
                         <span className="ltr:pl-3 rtl:pr-3 text-[#506690]">
-                        سفارش جاری
+                          سفارش جاری
                         </span>
                       </div>
                     </a>

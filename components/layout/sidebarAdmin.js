@@ -93,6 +93,22 @@ export default function SidebarAdmin({ isOpen, setIsOpen }) {
     };
   }, []);
 
+   useEffect(() => {
+  const timer = setTimeout(() => {
+    if (searchValue.trim()) {
+      router.push({
+        pathname: router.pathname,
+        query: { search: searchValue },
+      });
+    } else {
+      router.push(router.pathname);
+    }
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, [searchValue, router]);
+
+
   useEffect(() => {
     if (windowWidth >= 1024) {
       setIsOpen(true);
